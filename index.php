@@ -22,42 +22,8 @@ session_start();
     <!-- Existing head content -->
 </head>
 <body>
-<header class="header">
-    <a href="#" class="logo"> <i class="fas fa-paw"></i> SafariGate</a>
-    
-    <nav class="navbar">
-        <a href="#home">home</a>
-        <a href="#about">about</a>
-        <a href="#gallery">gallery</a>
-        <a href="#animal">animal</a>
-        <a href="#pricing">pricing</a>
-        <a href="#contact">contact</a>
-        <a href="d.php">donation</a>
-        <a href="a.php">adoption</a>
-    </nav>
+    <?php include 'header.php'; ?>
 
-    <div class="icons">
-        <?php if(isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
-            <div id="login-btn" class="fas fa-user">
-                <form class="login-form">
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['user']); ?></span>
-                    <a href="profile.php" class="btn">Profile</a>
-                    <a href="logout.php" class="btn">Logout</a>
-                </form>
-            </div>
-        <?php else: ?>
-            <div id="login-btn" class="fas fa-user"></div>
-            <div id="menu-btn" class="fas fa-bars"></div>
-        <?php endif; ?>
-    </div>
-
-    <?php if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true): ?>
-    <form action="login.php" class="login-form">
-        <a href="login.php" class="btn">Login</a>
-        <a href="register.php" class="btn">Register</a>
-    </form>
-    <?php endif; ?>
-</header>
 
     <!-- Rest of the existing index.php content -->
 
@@ -66,11 +32,20 @@ session_start();
             <h3>enjoy the wonderful <br>
             adventure of the <br> animals</h3>
             <?php if(isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
-                <a href="booking.php" class="btn">meet the zoo</a>
+                <div class="cta-buttons">
+                    <a href="booking.php" class="btn btn-primary pulse-button">
+                        <i class="fas fa-ticket-alt"></i>
+                        Book Your Tickets Now!
+                    </a>
+                </div>
             <?php else: ?>
-                <a href="login.php" class="btn">meet the zoo</a>
+                <div class="cta-buttons">
+                    <a href="login.php" class="btn btn-primary pulse-button">
+                        <i class="fas fa-ticket-alt"></i>
+                        Book Your Tickets Now!
+            </a>
+                </div>
             <?php endif; ?>
-    
 
 
     <!-- Similar conditional redirects for donation and adoption buttons -->
@@ -275,7 +250,7 @@ session_start();
         <!-- end -->
 
         <!-- contact -->
-
+<!-- 
         <section class="contact" id="contact">
 
             <h2 class="heading">contact</h2>
@@ -298,7 +273,7 @@ session_start();
 
             </form>
 
-        </section>
+        </section> -->
 
         <!-- end -->
 

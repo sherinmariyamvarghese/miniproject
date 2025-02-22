@@ -26,19 +26,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Proceed if no validation errors
     if (empty($emailErr) && empty($passwordErr)) {
-        // Prepare SQL statement
+        // Prepare SQL statement\\sql query
         $stmt = $conn->prepare("SELECT id, username, role, password FROM users WHERE email = ? LIMIT 1");
-
-        if ($stmt === false) {
+           //LIMIT 1 ensures only one result is fetched.
+        if ($stmt === false)//statement prepartion object
+         {
             error_log("Database prepare error: " . $conn->error);
             die("Database error. Please try again.");
         }
 
         $stmt->bind_param("s", $email);
+        //bind_param("s", $email); → Binds $email to the prepared SQL statement ("s" means it is a string).
         $stmt->execute();
         $result = $stmt->get_result();
 
-        if ($result->num_rows > 0) {
+        if ($result->num_rows > 0)//If at least one matching user is found, fetch the user details as an associative array.
+         {
             $user = $result->fetch_assoc();
 
             // Verify password
@@ -51,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
-                    header("Location:dashboard.php");
+                    header("Location:admin_dashboard.php");
                 } else {
                     header("Location: index.php");
                 }

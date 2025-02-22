@@ -132,42 +132,7 @@ include 'connect.php';
     </style>
 </head>
 <body>
-<header class="header">
-    <a href="#" class="logo"> <i class="fas fa-paw"></i> SafariGate</a>
-    
-    <nav class="navbar">
-        <a href="index.php#home">home</a>
-        <a href="index.php#about">about</a>
-        <a href="index.php#gallery">gallery</a>
-        <a href="index.php#animal">animal</a>
-        <a href="index.php#pricing">pricing</a>
-        <a href="index.php#contact">contact</a>
-        <a href="d.php">donation</a>
-        <a href="a.php">adoption</a>
-    </nav>
-
-    <div class="icons">
-        <?php if(isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
-            <div id="login-btn" class="fas fa-user">
-                <form class="login-form">
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['user']); ?></span>
-                    <a href="profile.php" class="btn">Profile</a>
-                    <a href="logout.php" class="btn">Logout</a>
-                </form>
-            </div>
-        <?php else: ?>
-            <div id="login-btn" class="fas fa-user"></div>
-            <div id="menu-btn" class="fas fa-bars"></div>
-        <?php endif; ?>
-    </div>
-
-    <?php if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true): ?>
-    <form action="login.php" class="login-form">
-        <a href="login.php" class="btn">Login</a>
-        <a href="register.php" class="btn">Register</a>
-    </form>
-    <?php endif; ?>
-</header>
+<?php include 'header.php'; ?>
 
     <section class="adoption-info-section">
         <h2 class="heading">Animal Adoption Program</h2>
