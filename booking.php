@@ -63,7 +63,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        header('Location: ');
+        // Store booking data in session
+        $_SESSION['booking'] = [
+            'visit_date' => $visitDate,
+            'adult_tickets' => $adultTickets,
+            'child_0_5_tickets' => $child0Tickets,
+            'child_5_12_tickets' => $child5Tickets,
+            'senior_tickets' => $seniorTickets,
+            'camera_video' => $cameraVideo,
+            'document' => $document['name']
+        ];
+
+        // Redirect to payment page
+        header('Location: payment.php');
         exit;
     }
 }
@@ -328,58 +340,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         dateInput.addEventListener('keydown', e => e.preventDefault());
         calculateTotal();
     </script>
-<section class="footer">
+    
+    <?php include 'footer.php'; ?>
 
-<div class="box-container">
-
-    <div class="box">
-        <h3><i class="fas fa-paw"></i> zoo</h3>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-        <p class="links"><i class="fas fa-clock"></i>monday - friday</p>
-        <p class="days">7:00AM - 11:00PM</p>
-    </div>
-
-    <div class="box">
-        <h3>Contact Info</h3>
-        <a href="#" class="links"><i class="fas fa-phone"></i> 1245-147-2589</a>
-        <a href="#" class="links"><i class="fas fa-phone"></i> 1245-147-2589</a>
-        <a href="#" class="links"><i class="fas fa-envelope"></i> info@zoolife.com</a>
-        <a href="#" class="links"><i class="fas fa-map-marker-alt"></i> karachi, pakistan</a>
-    </div>
-
-    <div class="box">
-        <h3>quick links</h3>
-        <a href="#" class="links"> <i class="fas fa-arrow-right"></i>home</a>
-        <a href="#" class="links"> <i class="fas fa-arrow-right"></i>about</a>
-        <a href="#" class="links"> <i class="fas fa-arrow-right"></i>gallery</a>
-        <a href="#" class="links"> <i class="fas fa-arrow-right"></i>animal</a>
-        <a href="#" class="links"> <i class="fas fa-arrow-right"></i>pricing</a>
-    </div>
-
-    <div class="box">
-        <h3>newsletter</h3>
-        <p>subscribe for latest updates</p>
-        <input type="email" placeholder="Your Email" class="email">
-        <a href="#" class="btn">subscribe</a>
-        <div class="share">
-            <a href="#" class="fab fa-facebook-f"></a>
-            <a href="#" class="fab fa-twitter"></a>
-            <a href="#" class="fab fa-instagram"></a>
-            <a href="#" class="fab fa-linkedin"></a>
-        </div>
-    </div>
-
-</div>
-
-<div class="credit">&copy; 2022 zoolife. All rights reserved by <a href="#" class="link">ninjashub</a></div>
-
-</section>
-
-<script src="https://unpkg.com/swiper@7/swiper-bundle.min.js"></script>
-
-<script src="js/script.js"></script>
-
-
-<script src="js/script.js"></script>
 </body>
 </html>

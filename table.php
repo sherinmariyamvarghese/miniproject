@@ -113,7 +113,6 @@ if (mysqli_query($conn, $sql_animals)) {
 // Create bookings table
 $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
     visit_date DATE NOT NULL,
     adult_tickets INT DEFAULT 0,
     child_0_5_tickets INT DEFAULT 0,
@@ -122,10 +121,15 @@ $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     camera_video BOOLEAN DEFAULT 0,
     document_path VARCHAR(255),
     total_amount DECIMAL(10,2) NOT NULL,
+    payment_status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    address TEXT NOT NULL,
     booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
     INDEX idx_visit_date (visit_date),
-    INDEX idx_user (user_id)
+    INDEX idx_email (email)
 )";
 
 if (mysqli_query($conn, $sql_bookings)) {
@@ -142,8 +146,6 @@ $sql_adoptions = "CREATE TABLE IF NOT EXISTS adoptions (
     period_type ENUM('daily', 'monthly', 'yearly') NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    quantity INT NOT NULL,
-    total_amount DECIMAL(10,2) NOT NULL,
     status ENUM('pending', 'active', 'completed', 'cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),

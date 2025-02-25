@@ -399,6 +399,29 @@ if (isset($_GET['toggle_availability']) && is_numeric($_GET['toggle_availability
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        .dashboard-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--main);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-link:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -541,6 +564,15 @@ if (isset($_GET['toggle_availability']) && is_numeric($_GET['toggle_availability
                                             <span class="status-badge status-archived">Archived</span>
                                         <?php endif; ?>
                                     </td>
+                                    <!-- Conditionally display vaccination status -->
+                                    <?php if (strtolower($animal['species']) !== 'aquatic animals'): ?>
+                                        <td>
+                                            <strong>Vaccination Status:</strong> 
+                                            <span class="vaccination-badge <?php echo $animal['vaccination_status'] ? 'completed' : 'not-completed'; ?>">
+                                                <?php echo $animal['vaccination_status'] ? 'Completed' : 'Not Completed'; ?>
+                                            </span>
+                                        </td>
+                                    <?php endif; ?>
                                     <td>
                                         <div class="action-buttons">
                                             <a href="edit_animal.php?id=<?php echo $animal['id']; ?>" class="btn btn-edit">
@@ -576,6 +608,10 @@ if (isset($_GET['toggle_availability']) && is_numeric($_GET['toggle_availability
     ?>
 </div>
 <!-- main content ends -->
+
+<a href="admin_dashboard.php" class="dashboard-link">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+</a>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

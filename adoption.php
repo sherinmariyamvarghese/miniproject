@@ -65,8 +65,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include 'header.php'; ?>
 
 <div class="main-content">
-    <div class="view-header">
-        <div><i class="fas fa-heart"></i> Animal Adoption Program</div>
+    <div class="header-section">
+        <div class="view-header">
+            <div><i class="fas fa-heart"></i> Animal Adoption Program</div>
+        </div>
+        
+        <div class="summary-section">
+            <h2 class="summary-title"><i class="fas fa-clipboard-list"></i> Adoption Summary</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Animal</th>
+                        <th>Duration</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                
+                <tbody id="summaryTableBody">
+                    <!-- Adoption summary rows will be inserted here by JavaScript -->
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="2" class="total-label">Total Amount:</td>
+                        <td id="totalAmount" class="total-amount">₹0</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <button type="submit" class="adopt-button" id="completeAdoptionBtn" disabled>
+                <i class="fas fa-check-circle"></i> Complete Adoption
+            </button>
+        </div>
     </div>
 
     <!-- Show messages/errors if any -->
@@ -223,31 +254,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                     data-animal-id="<?php echo $animal['id']; ?>"
                                                     data-daily="<?php echo $animal['daily_rate']; ?>"
                                                     data-monthly="<?php echo $animal['monthly_rate']; ?>"
-                                                    data-yearly="<?php echo $animal['yearly_rate']; ?>"
-                                                    onchange="updateRateDisplay(this)">
+                                                    data-yearly="<?php echo $animal['yearly_rate']; ?>">
                                                 <option value="daily">Daily (₹<?php echo number_format($animal['daily_rate']); ?>)</option>
                                                 <option value="monthly">Monthly (₹<?php echo number_format($animal['monthly_rate']); ?>)</option>
                                                 <option value="yearly">Yearly (₹<?php echo number_format($animal['yearly_rate']); ?>)</option>
                                             </select>
                                         </div>
-                                        <div class="option-group">
-                                            <label><i class="fas fa-hashtag" style="color: #ff6e01;"></i> Quantity:</label>
-                                            <input type="number" 
-                                                   class="quantity-input"
-                                                   data-animal-id="<?php echo $animal['id']; ?>"
-                                                   min="0" 
-                                                   max="10"
-                                                   value="0" 
-                                                   onchange="updateRateDisplay(this)">
-                                        </div>
-                                        <div class="rate-display" id="rate-<?php echo $animal['id']; ?>">
-                                            <i class="fas fa-tags" style="color: #ff6e01;"></i> Subtotal: ₹0
-                                        </div>
-                                        
                                         <div class="button-group">
                                             <button type="button" 
                                                     class="adopt-button"
-                                                    onclick="addToAdoption(<?php echo $animal['id']; ?>, '<?php echo htmlspecialchars($animal['name']); ?>')">
+                                                    onclick="addToAdoption(
+                                                        <?php echo $animal['id']; ?>, 
+                                                        '<?php echo htmlspecialchars($animal['name']); ?>'
+                                                    )">
                                                 <i class="fas fa-heart" style="color: #fff;"></i> Add to Adoption
                                             </button>
                                             <button type="button" 
@@ -281,41 +300,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         ?>
 
-        <div class="summary-section">
-            <h2 class="summary-title"><i class="fas fa-clipboard-list"></i> Adoption Summary</h2>
-            <table class="summary-table">
-                <thead>
-                    <tr>
-                        <th>Animal</th>
-                        <th>Quantity</th>
-                        <th>Duration</th>
-                        <th>Rate</th>
-                        <th>Amount</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                
-                <tbody id="summaryTableBody">
-                    <!-- Adoption summary rows will be inserted here by JavaScript -->
-                </tbody>
-                <tfoot>
-                    <tr class="total-row">
-                        <td colspan="4">Total Amount:</td>
-                        <td id="totalAmount">₹0</td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
-            
-            <button type="submit" class="adopt-button" id="completeAdoptionBtn" disabled>
-                <i class="fas fa-check-circle"></i> Complete Adoption
-            </button>
-        </div>
-
         <!-- Hidden fields for form submission -->
         <input type="hidden" id="animal_id" name="animal_id" value="">
         <input type="hidden" id="period_type" name="period_type" value="">
-        <input type="hidden" id="quantity" name="quantity" value="">
+        <input type="hidden" id="quantity" name="quantity" value="1">
     </form>
 </div>
 
@@ -372,14 +360,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i class="fas ${healthIcon}" style="color: ${healthColor};"></i>
                         <strong>Health Status:</strong> ${animal.health_status || 'N/A'}
                     </div>
-                    <div class="detail-item">
-                        <i class="fas fa-syringe" style="color: #ff6e01;"></i>
-                        <strong>Vaccination Status:</strong> 
-                        <span class="vaccination-badge ${animal.vaccination_status ? 'completed' : 'not-completed'}">
-                            <i class="fas ${animal.vaccination_status ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                            ${animal.vaccination_status ? 'Completed' : 'Not Completed'}
-                        </span>
-                    </div>
                 </div>
                 <div class="detail-section">
                     <h3><i class="fas fa-info-circle" style="color: #ff6e01;"></i> Description</h3>
@@ -415,14 +395,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Global object to track adoptions
     let adoptions = {};
     
+    // Load adoptions from localStorage when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load saved adoptions from localStorage
+        const savedAdoptions = localStorage.getItem('adoptions');
+        if (savedAdoptions) {
+            adoptions = JSON.parse(savedAdoptions);
+            updateSummaryTable();
+        }
+
+        document.querySelectorAll('.period-select').forEach(select => {
+            updateRateDisplay(select);
+        });
+        
+        // Form submission handling for multiple animals
+        document.getElementById('adoptionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (Object.keys(adoptions).length > 1) {
+                alert("Multiple animal adoptions are not yet supported. Please adopt one animal at a time.");
+                return;
+            }
+            
+            // Clear adoptions from localStorage after successful submission
+            localStorage.removeItem('adoptions');
+            this.submit();
+        });
+    });
+
     // Updates the rate display for an animal
     function updateRateDisplay(element) {
         const animalId = element.dataset.animalId;
         const periodSelect = document.querySelector(`.period-select[data-animal-id="${animalId}"]`);
-        const quantityInput = document.querySelector(`.quantity-input[data-animal-id="${animalId}"]`);
         
         const period = periodSelect.value;
-        const quantity = parseInt(quantityInput.value) || 0;
         
         let rate;
         switch(period) {
@@ -437,24 +443,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
         }
         
-        const subtotal = quantity * rate;
         const rateDisplay = document.getElementById(`rate-${animalId}`);
-        rateDisplay.textContent = `Subtotal: ₹${subtotal.toLocaleString()}`;
+        rateDisplay.textContent = `Subtotal: ₹${rate.toLocaleString()}`;
     }
     
     // Adds an animal to the adoption summary
     function addToAdoption(animalId, animalName) {
         const periodSelect = document.querySelector(`.period-select[data-animal-id="${animalId}"]`);
-        const quantityInput = document.querySelector(`.quantity-input[data-animal-id="${animalId}"]`);
-        
         const period = periodSelect.value;
-        const quantity = parseInt(quantityInput.value) || 0;
         
-        if (quantity <= 0) {
-            alert("Please select at least 1 quantity");
-            return;
-        }
-        
+        // Get the rate based on the period
         let rate;
         switch(period) {
             case 'daily':
@@ -467,57 +465,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 rate = parseFloat(periodSelect.dataset.yearly);
                 break;
         }
-        
-        const subtotal = quantity * rate;
         
         // Add to adoptions object
         adoptions[animalId] = {
             name: animalName,
             period: period,
             periodDisplay: period.charAt(0).toUpperCase() + period.slice(1),
-            quantity: quantity,
             rate: rate,
-            subtotal: subtotal
+            quantity: 1  // Default quantity
         };
+        
+        // Save to localStorage
+        localStorage.setItem('adoptions', JSON.stringify(adoptions));
         
         // Update summary table
         updateSummaryTable();
+        
+        // Show success message
+        alert(`${animalName} has been added to your adoption list!`);
     }
     
     // Updates the adoption summary table
     function updateSummaryTable() {
         const summaryTableBody = document.getElementById('summaryTableBody');
         summaryTableBody.innerHTML = '';
-        
-        let total = 0;
         let hasItems = false;
+        let totalAmount = 0;
         
         for (const [animalId, adoption] of Object.entries(adoptions)) {
-            if (adoption.quantity > 0) {
-                hasItems = true;
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${adoption.name}</td>
-                    <td>${adoption.quantity}</td>
-                    <td>${adoption.periodDisplay}</td>
-                    <td>₹${adoption.rate.toLocaleString()}</td>
-                    <td>₹${adoption.subtotal.toLocaleString()}</td>
-                    <td>
-                        <button type="button" class="btn btn-delete" onclick="removeFromAdoption(${animalId})">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </td>
-                `;
-                summaryTableBody.appendChild(row);
-                total += adoption.subtotal;
-            }
+            hasItems = true;
+            const subtotal = adoption.rate * adoption.quantity;
+            totalAmount += subtotal;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${adoption.name}</td>
+                <td>${adoption.periodDisplay}</td>
+                <td>₹${subtotal.toLocaleString()}</td>
+                <td>
+                    <button type="button" class="btn btn-delete" onclick="removeFromAdoption(${animalId})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            `;
+            summaryTableBody.appendChild(row);
         }
         
         // Update total amount
-        document.getElementById('totalAmount').textContent = `₹${total.toLocaleString()}`;
+        document.getElementById('totalAmount').textContent = `₹${totalAmount.toLocaleString()}`;
         
-        // Enable/disable submit button
+        // Enable/disable submit button and update form fields
         const completeBtn = document.getElementById('completeAdoptionBtn');
         completeBtn.disabled = !hasItems;
         
@@ -535,30 +532,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Removes an animal from the adoption summary
     function removeFromAdoption(animalId) {
         delete adoptions[animalId];
+        
+        // Update localStorage
+        if (Object.keys(adoptions).length > 0) {
+            localStorage.setItem('adoptions', JSON.stringify(adoptions));
+        } else {
+            localStorage.removeItem('adoptions');
+        }
+        
         updateSummaryTable();
     }
-    
-    // Initialize rate displays
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.period-select').forEach(select => {
-            updateRateDisplay(select);
-        });
-        
-        // Form submission handling for multiple animals
-        document.getElementById('adoptionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // If we have more than one animal being adopted, we need to handle it differently
-            if (Object.keys(adoptions).length > 1) {
-                // This would require a different backend approach to handle multiple adoptions
-                alert("Multiple animal adoptions are not yet supported. Please adopt one animal at a time.");
-                return;
-            }
-            
-            // For single animal adoption, the hidden fields are already set
-            this.submit();
-        });
-    });
 
     // Function to get health status color
     function getHealthStatusColor(status) {
@@ -587,7 +570,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         contentDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
         modal.style.display = 'block';
         
-        fetch(`get_animal_details.php?id=${animalId}`)
+        fetch('get_animal_details.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `id=${animalId}`
+        })
             .then(response => response.json())
             .then(animal => {
                 const healthColor = getHealthStatusColor(animal.health_status || '');
@@ -642,14 +631,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <i class="fas ${healthIcon}" style="color: ${healthColor};"></i>
                                 <strong>Health Status:</strong> ${animal.health_status || 'N/A'}
                             </div>
-                            <div class="detail-item">
-                                <i class="fas fa-syringe" style="color: #ff6e01;"></i>
-                                <strong>Vaccination Status:</strong> 
-                                <span class="vaccination-badge ${animal.vaccination_status ? 'completed' : 'not-completed'}">
-                                    <i class="fas ${animal.vaccination_status ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                                    ${animal.vaccination_status ? 'Completed' : 'Not Completed'}
-                                </span>
-                            </div>
                         </div>
                         <div class="detail-section">
                             <h3><i class="fas fa-info-circle" style="color: #ff6e01;"></i> Description</h3>
@@ -695,6 +676,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             modal.style.display = 'none';
         }
     }
+
+    // Update the completeAdoptionBtn click handler in your script section
+    document.getElementById('completeAdoptionBtn').addEventListener('click', function() {
+        if (Object.keys(adoptions).length === 0) {
+            alert('Please add at least one animal to your adoption list.');
+            return;
+        }
+        
+        // Store adoptions in session storage for the payment page
+        sessionStorage.setItem('adoptions', JSON.stringify(adoptions));
+        
+        // Redirect to adoption payment page
+        window.location.href = 'adoption-payment.php';
+    });
 </script>
 
 <!-- Add this CSS to your style.css file -->
@@ -869,17 +864,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .adopt-button, .details-button {
-    background-color: #ff7f50; /* Coral color */
-    color: white; /* White text */
-    border: none; /* No border */
-    border-radius: 5px; /* Rounded corners */
-    padding: 10px 15px; /* Padding */
-    cursor: pointer; /* Pointer cursor */
-    transition: background-color 0.3s; /* Smooth transition */
+    background-color: #ff6e01;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
 }
 
 .adopt-button:hover, .details-button:hover {
-    background-color: #ff6347; /* Darker coral on hover */
+    background-color: #ff5500;
+}
+
+.adopt-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
 }
 
 /* Add these styles for health status colors */
@@ -995,6 +1010,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .rate-item i {
     font-size: 1.4em;
     margin-bottom: 5px;
+}
+
+.total-row {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.total-label {
+    text-align: right;
+    padding-right: 15px;
+}
+
+.total-amount {
+    color: #ff6e01;
+    font-size: 1.1em;
+}
+
+.summary-table tfoot td {
+    border-top: 2px solid #ddd;
+    padding: 12px;
 }
 </style>
 

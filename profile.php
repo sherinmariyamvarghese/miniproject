@@ -26,7 +26,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     function validatePhone($phone) {
-        return preg_match('/^[0-9]{10}$/', $phone);
+        // Remove any non-digit characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Check if exactly 10 digits and doesn't start with 0
+        if (!preg_match('/^[1-9][0-9]{9}$/', $phone)) {
+            return false;
+        }
+        
+        // Check for repeated digits (more than 7 times)
+        if (preg_match('/(.)\1{7,}/', $phone)) {
+            return false;
+        }
+        
+        // Check for sequential numbers (ascending or descending)
+        if (preg_match('/(0123456789|9876543210)/', $phone)) {
+            return false;
+        }
+        
+        return true;
     }
 
     function validateName($name) {
@@ -67,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Validate phone number
         if (!validatePhone($phone)) {
-            $errors[] = "Invalid phone number. Use 10 digits.";
+            $errors[] = "Invalid phone number. Must be 10 digits, cannot start with 0, and cannot contain repeated or sequential numbers.";
         }
 
         // Validate address
@@ -488,10 +506,24 @@ usernameInput.addEventListener('input', function() {
 // Real-time phone validation
 phoneInput.addEventListener('input', function() {
     const phoneError = document.getElementById('phone-error');
-    this.value = this.value.replace(/\D/g, ''); // Remove non-digits
+    // Remove non-digits
+    this.value = this.value.replace(/\D/g, '');
     
-    if (this.value.length !== 10) {
-        phoneError.textContent = 'Phone number must be exactly 10 digits';
+    const phone = this.value;
+    let errorMessage = '';
+    
+    if (phone.length !== 10) {
+        errorMessage = 'Phone number must be exactly 10 digits';
+    } else if (phone.charAt(0) === '0') {
+        errorMessage = 'Phone number cannot start with 0';
+    } else if (/(.)\1{7,}/.test(phone)) {
+        errorMessage = 'Phone number cannot contain excessive repeated digits';
+    } else if (/(0123456789|9876543210)/.test(phone)) {
+        errorMessage = 'Phone number cannot be sequential';
+    }
+    
+    if (errorMessage) {
+        phoneError.textContent = errorMessage;
         this.classList.add('invalid');
     } else {
         phoneError.textContent = '';

@@ -140,6 +140,11 @@ include 'connect.php';
         <div class="adoption-container">
             <div class="adoption-intro">
                 <p>Join SafariGate's Animal Adoption Program and become a guardian for our wonderful animals. Your adoption helps provide essential care, nutrition, and enrichment for our zoo residents while supporting wildlife conservation.</p>
+                <?php if(isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
+                <a href="adoption.php" class="btn">Adopt Now</a>
+            <?php else: ?>
+                <a href="login.php" class="btn">Adopt Now</a>
+            <?php endif; ?>
             </div>
 
             <div class="info-grid">
@@ -185,80 +190,9 @@ include 'connect.php';
             </div>
         </div>
     </section>
+    
+    <?php include 'footer.php'; ?>
 
-    <section class="footer">
-
-            <div class="box-container">
-
-                <div class="box">
-                    <h3><i class="fas fa-paw"></i> zoo</h3>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-                    <p class="links"><i class="fas fa-clock"></i>monday - friday</p>
-                    <p class="days">7:00AM - 11:00PM</p>
-                </div>
-
-                <div class="box">
-                    <h3>Contact Info</h3>
-                    <a href="#" class="links"><i class="fas fa-phone"></i> 1245-147-2589</a>
-                    <a href="#" class="links"><i class="fas fa-phone"></i> 1245-147-2589</a>
-                    <a href="#" class="links"><i class="fas fa-envelope"></i> info@zoolife.com</a>
-                    <a href="#" class="links"><i class="fas fa-map-marker-alt"></i> karachi, pakistan</a>
-                </div>
-
-                <div class="box">
-                    <h3>quick links</h3>
-                    <a href="#" class="links"> <i class="fas fa-arrow-right"></i>home</a>
-                    <a href="#" class="links"> <i class="fas fa-arrow-right"></i>about</a>
-                    <a href="#" class="links"> <i class="fas fa-arrow-right"></i>gallery</a>
-                    <a href="#" class="links"> <i class="fas fa-arrow-right"></i>animal</a>
-                    <a href="#" class="links"> <i class="fas fa-arrow-right"></i>pricing</a>
-                </div>
-
-                <div class="box">
-                    <h3>newsletter</h3>
-                    <p>subscribe for latest updates</p>
-                    <input type="email" placeholder="Your Email" class="email">
-                    <a href="#" class="btn">subscribe</a>
-                    <div class="share">
-                        <a href="#" class="fab fa-facebook-f"></a>
-                        <a href="#" class="fab fa-twitter"></a>
-                        <a href="#" class="fab fa-instagram"></a>
-                        <a href="#" class="fab fa-linkedin"></a>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="credit">&copy; 2022 zoolife. All rights reserved by <a href="#" class="link">ninjashub</a></div>
-
-        </section>
-
-
-
-
-
-
-        <!-- end -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <script src="https://unpkg.com/swiper@7/swiper-bundle.min.js"></script>
-
-        <script src="js/script.js"></script>
-
-
-    <script src="js/script.js"></script>
+   
 </body>
 </html>

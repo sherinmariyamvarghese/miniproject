@@ -1,13 +1,13 @@
 <?php
 require_once 'connect.php';
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid animal ID']);
     exit;
 }
 
-$animal_id = $_GET['id'];
+$animal_id = $_POST['id'];
 $stmt = $conn->prepare("
     SELECT a.*, c.name as category_name 
     FROM animals a 

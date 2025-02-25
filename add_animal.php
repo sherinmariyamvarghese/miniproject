@@ -24,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $diet_type = $_POST['diet_type'];
     $habitat = $_POST['habitat'];
     $health_status = $_POST['health_status'];
-    $vaccination_status = isset($_POST['vaccination_status']) ? 1 : 0;
     $description = $_POST['description'];
     $special_notes = $_POST['special_notes'];
     $daily_rate = $_POST['daily_rate'];
@@ -46,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $sql = "INSERT INTO animals (name, species, category_id, gender, age, birth_year, 
-            weight, height, color, diet_type, habitat, health_status, vaccination_status,
+            weight, height, color, diet_type, habitat, health_status,
             description, special_notes, image_url, daily_rate, monthly_rate, yearly_rate) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -54,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("ssissddsssssisssddd", 
         $name, $species, $category_id, $gender, $age, $birth_year, 
         $weight, $height, $color, $diet_type, $habitat, $health_status, 
-        $vaccination_status, $description, $special_notes, $image_url, 
+        $description, $special_notes, $image_url, 
         $daily_rate, $monthly_rate, $yearly_rate
     );
 
@@ -155,9 +154,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: none;
             border-radius: 4px;
         }
+
+        .dashboard-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--main);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-link:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
+    <a href="admin_dashboard.php" class="dashboard-link">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
     <div class="add-animal-container">
         <div class="form-container">
             <div class="form-header">
@@ -240,13 +265,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="vaccination_status">
-                        Vaccination Complete
-                    </label>
-                </div>
-
-                <div class="form-group">
                     <label>Description:</label>
                     <textarea name="description" required></textarea>
                 </div>
@@ -267,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="rate-inputs">
                         <input type="number" name="daily_rate" placeholder="Day Rate" required>
                         <input type="number" name="monthly_rate" placeholder="1 Month Rate" required>
-                        <input type="number" name="yearly_rate" placeholder="1Year Rate" required>
+                        <input type="number" name="yearly_rate" placeholder="1 Year Rate" required>
                     </div>
                 </div>
 

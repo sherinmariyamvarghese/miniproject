@@ -46,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $diet_type = $_POST['diet_type'];
     $habitat = $_POST['habitat'];
     $health_status = $_POST['health_status'];
-    $vaccination_status = isset($_POST['vaccination_status']) ? 1 : 0;
     $description = $_POST['description'];
     $special_notes = $_POST['special_notes'];
     $daily_rate = $_POST['daily_rate'];
@@ -74,15 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sql = "UPDATE animals SET 
             name=?, species=?, category_id=?, gender=?, age=?, birth_year=?,
             weight=?, height=?, color=?, diet_type=?, habitat=?, health_status=?,
-            vaccination_status=?, description=?, special_notes=?, image_url=?,
+            description=?, special_notes=?, image_url=?,
             daily_rate=?, monthly_rate=?, yearly_rate=?
             WHERE id=?";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssissddsssssisssdddi", 
+    $stmt->bind_param("ssissddsssssisssddd", 
         $name, $species, $category_id, $gender, $age, $birth_year,
         $weight, $height, $color, $diet_type, $habitat, $health_status,
-        $vaccination_status, $description, $special_notes, $image_url,
+        $description, $special_notes, $image_url,
         $daily_rate, $monthly_rate, $yearly_rate, $animal_id
     );
 
@@ -271,13 +270,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="Under Treatment" <?php echo ($animal['health_status'] == 'Under Treatment') ? 'selected' : ''; ?>>Under Treatment</option>
                         <option value="Critical" <?php echo ($animal['health_status'] == 'Critical') ? 'selected' : ''; ?>>Critical</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="vaccination_status" <?php echo $animal['vaccination_status'] ? 'checked' : ''; ?>>
-                        Vaccination Complete
-                    </label>
                 </div>
 
                 <div class="form-group">
