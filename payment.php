@@ -18,34 +18,53 @@ $cameraAmount = $booking['camera_video'] ? 100 : 0;
 $totalAmount = $adultAmount + $child5Amount + $seniorAmount + $cameraAmount;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Process payment and store booking
-    $sql = "INSERT INTO bookings (visit_date, adult_tickets, child_0_5_tickets, child_5_12_tickets, 
-            senior_tickets, camera_video, document_path, total_amount, payment_status,
-            name, email, phone, city, address) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?, ?)";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("siiiiisdsssss", 
-        $booking['visit_date'],
-        $booking['adult_tickets'],
-        $booking['child_0_5_tickets'],
-        $booking['child_5_12_tickets'],
-        $booking['senior_tickets'],
-        $booking['camera_video'],
-        $booking['document'],
-        $totalAmount,
-        $_POST['name'],
-        $_POST['email'],
-        $_POST['phone'],
-        $_POST['city'],
-        $_POST['address']
-    );
+    try {
+        // Begin transaction
+        $conn->begin_transaction();
 
-    if ($stmt->execute()) {
-        // Clear booking session
-        unset($_SESSION['booking']);
-        header('Location: booking-confirmation.php');
-        exit;
+        // Insert into bookings table
+        $sql = "INSERT INTO bookings (
+            visit_date, adult_tickets, child_0_5_tickets, child_5_12_tickets, 
+            senior_tickets, camera_video, document_path, total_amount, payment_status,
+            name, email, phone, city, address
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            "siiiiisdsssss",
+            $booking['visit_date'],
+            $booking['adult_tickets'],
+            $booking['child_0_5_tickets'],
+            $booking['child_5_12_tickets'],
+            $booking['senior_tickets'],
+            $booking['camera_video'],
+            $booking['document'],
+            $totalAmount,
+            $_POST['name'],
+            $_POST['email'],
+            $_POST['phone'],
+            $_POST['city'],
+            $_POST['address']
+        );
+
+        if ($stmt->execute()) {
+            // Commit transaction
+            $conn->commit();
+            
+            // Clear booking session
+            unset($_SESSION['booking']);
+            
+            // Set success message
+            $_SESSION['success_message'] = "Booking confirmed successfully!";
+            
+            // Redirect to confirmation page
+            header('Location: booking-confirmation.php');
+            exit;
+        }
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        $conn->rollback();
+        $error_message = "Error processing booking. Please try again.";
     }
 }
 ?>

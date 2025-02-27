@@ -9,22 +9,25 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Process payment and store adoption
-    $sql = "INSERT INTO adoptions (user_id, animal_id, period_type, total_amount, payment_status,
-            name, email, phone, city, address) 
-            VALUES (?, ?, ?, ?, 'completed', ?, ?, ?, ?, ?)";
+    // Process payment and update adoption
+    $sql = "UPDATE adoptions 
+            SET status = 'completed',
+                payment_status = 'completed',
+                name = ?,
+                email = ?,
+                phone = ?,
+                city = ?,
+                address = ?
+            WHERE user_id = ? AND status = 'pending'";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iisdsssss", 
-        $_SESSION['user_id'],
-        $_POST['animal_id'],
-        $_POST['period_type'],
-        $_POST['total_amount'],
+    $stmt->bind_param("sssssi", 
         $_POST['name'],
         $_POST['email'],
         $_POST['phone'],
         $_POST['city'],
-        $_POST['address']
+        $_POST['address'],
+        $_SESSION['user_id']
     );
 
     if ($stmt->execute()) {
@@ -33,6 +36,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: adoption-confirmation.php');
         exit;
     }
+}
+
+// Fetch pending adoptions for this user
+$stmt = $conn->prepare("
+    SELECT a.id, a.period_type, a.amount,
+           a.animal_name, a.animal_id
+    FROM adoptions a
+    WHERE a.user_id = ? AND a.status = 'pending'
+");
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+$result = $stmt->get_result();
+$pendingAdoptions = $result->fetch_all(MYSQLI_ASSOC);
+
+if (empty($pendingAdoptions)) {
+    header('Location: adoption.php');
+    exit;
 }
 ?>
 
@@ -289,7 +309,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="booking-summary">
             <h3>Adoption Summary</h3>
             <div id="adoptionSummary">
-                <!-- Will be filled by JavaScript -->
+                <?php foreach ($pendingAdoptions as $adoption): ?>
+                    <p><?php echo $adoption['animal_name']; ?> - 
+                       <?php echo ucfirst(str_replace('_', ' ', $adoption['period_type'])); ?> 
+                       (₹<?php echo number_format($adoption['amount']); ?>)</p>
+                <?php endforeach; ?>
+                <h4>Total Amount: ₹<?php 
+                    $total = array_sum(array_column($pendingAdoptions, 'amount'));
+                    echo number_format($total); 
+                ?></h4>
             </div>
         </div>
 
@@ -351,39 +379,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        // Load adoption details from sessionStorage
         document.addEventListener('DOMContentLoaded', function() {
-            const adoptions = JSON.parse(sessionStorage.getItem('adoptions') || '{}');
             const summaryDiv = document.getElementById('adoptionSummary');
             let totalAmount = 0;
 
-            // Display each adoption
-            for (const [animalId, adoption] of Object.entries(adoptions)) {
-                const subtotal = adoption.rate;
-                totalAmount += subtotal;
-
+            // Display pending adoptions from PHP
+            <?php foreach ($pendingAdoptions as $adoption): ?>
+                totalAmount += <?php echo $adoption['amount']; ?>;
                 summaryDiv.innerHTML += `
-                    <p>${adoption.name} - ${adoption.periodDisplay} (₹${subtotal.toLocaleString()})</p>
+                    <p><?php echo $adoption['animal_name']; ?> - 
+                       <?php echo ucfirst(str_replace('_', ' ', $adoption['period_type'])); ?> 
+                       (₹<?php echo number_format($adoption['amount']); ?>)</p>
                 `;
+            <?php endforeach; ?>
 
-                // Set hidden fields for the first (and should be only) adoption
-                document.getElementById('animal_id').value = animalId;
-                document.getElementById('period_type').value = adoption.period;
-                document.getElementById('total_amount').value = subtotal;
-            }
-
-            summaryDiv.innerHTML += `<h4>Total Amount: ₹${totalAmount.toLocaleString()}</h4>`;
+            summaryDiv.innerHTML += `<h4>Total Amount: ₹${totalAmount.toLocaleString()}</h4>`
         });
-
-        function selectPayment(method) {
-            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
-            document.querySelectorAll('.payment-details').forEach(el => el.style.display = 'none');
-            
-            event.currentTarget.classList.add('selected');
-            document.getElementById(method + 'Details').style.display = 'block';
-        }
     </script>
-
-    <?php include 'footer.php'; ?>
 </body>
-</html> 
+</html>

@@ -149,7 +149,7 @@ function test_input($data) {
             if (passwordInput === "") {
                 passwordError.textContent = "Password is required";
             } else if (passwordInput.length < 6) {
-                passwordError.textContent = "Password must be at least 6 characters";
+                passwordError.textContent = "";
             } else {
                 passwordError.textContent = "";
             }

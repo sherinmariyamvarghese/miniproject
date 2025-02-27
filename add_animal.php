@@ -26,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $health_status = $_POST['health_status'];
     $description = $_POST['description'];
     $special_notes = $_POST['special_notes'];
-    $daily_rate = $_POST['daily_rate'];
-    $monthly_rate = $_POST['monthly_rate'];
-    $yearly_rate = $_POST['yearly_rate'];
+    $daily_rate = $_POST['one_day_rate'];
+    $monthly_rate = $_POST['one_month_rate'];
+    $yearly_rate = $_POST['one_year_rate'];
     
     // Handle file upload
     $target_dir = "uploads/animals/";
@@ -47,10 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sql = "INSERT INTO animals (name, species, category_id, gender, age, birth_year, 
             weight, height, color, diet_type, habitat, health_status,
             description, special_notes, image_url, daily_rate, monthly_rate, yearly_rate) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssissddsssssisssddd", 
+    $stmt->bind_param("ssissddssssssssddd",
         $name, $species, $category_id, $gender, $age, $birth_year, 
         $weight, $height, $color, $diet_type, $habitat, $health_status, 
         $description, $special_notes, $image_url, 
@@ -283,9 +283,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-group">
                     <label>Adoption Rates:</label>
                     <div class="rate-inputs">
-                        <input type="number" name="daily_rate" placeholder="Day Rate" required>
-                        <input type="number" name="monthly_rate" placeholder="1 Month Rate" required>
-                        <input type="number" name="yearly_rate" placeholder="1 Year Rate" required>
+                        <input type="number" name="one_day_rate" placeholder="1 Day Rate" required>
+                        <input type="number" name="one_month_rate" placeholder="1 Month Rate" required>
+                        <input type="number" name="one_year_rate" placeholder="1 Year Rate" required>
                     </div>
                 </div>
 

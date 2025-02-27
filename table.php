@@ -81,6 +81,9 @@ $sql_animals = "CREATE TABLE IF NOT EXISTS animals (
     adoption_price_day DECIMAL(10,2) NOT NULL,
     adoption_price_month DECIMAL(10,2) NOT NULL,
     adoption_price_year DECIMAL(10,2) NOT NULL,
+    one_day_rate DECIMAL(10,2) NOT NULL,
+    one_month_rate DECIMAL(10,2) NOT NULL,
+    one_year_rate DECIMAL(10,2) NOT NULL,
     available BOOLEAN DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES animal_categories(id),
@@ -111,13 +114,19 @@ if (mysqli_query($conn, $sql_animals)) {
 }
 
 // Create bookings table
+// First drop the existing bookings table
+$sql_drop = "DROP TABLE IF EXISTS bookings";
+if (mysqli_query($conn, $sql_drop)) {
+    echo "Old bookings table dropped successfully.<br>";
+}
+
 $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     visit_date DATE NOT NULL,
-    adult_tickets INT DEFAULT 0,
-    child_0_5_tickets INT DEFAULT 0,
-    child_5_12_tickets INT DEFAULT 0,
-    senior_tickets INT DEFAULT 0,
+    adult_tickets INT DEFAULT 0 CHECK (adult_tickets >= 0),
+    child_0_5_tickets INT DEFAULT 0 CHECK (child_0_5_tickets >= 0),
+    child_5_12_tickets INT DEFAULT 0 CHECK (child_5_12_tickets >= 0), 
+    senior_tickets INT DEFAULT 0 CHECK (senior_tickets >= 0),
     camera_video BOOLEAN DEFAULT 0,
     document_path VARCHAR(255),
     total_amount DECIMAL(10,2) NOT NULL,
@@ -128,6 +137,9 @@ $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     city VARCHAR(100) NOT NULL,
     address TEXT NOT NULL,
     booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT check_total_tickets CHECK (
+        (adult_tickets + child_0_5_tickets + child_5_12_tickets + senior_tickets) <= 100
+    ),
     INDEX idx_visit_date (visit_date),
     INDEX idx_email (email)
 )";
@@ -138,25 +150,37 @@ if (mysqli_query($conn, $sql_bookings)) {
     echo "Error creating bookings table: " . mysqli_error($conn) . "<br>";
 }
 
-// Create adoptions table
+// First, drop the existing adoptions table if it exists
+$sql_drop = "DROP TABLE IF EXISTS adoptions";
+if (mysqli_query($conn, $sql_drop)) {
+    echo "Old adoptions table dropped successfully.<br>";
+}
+
+// Create adoptions table with new structure
 $sql_adoptions = "CREATE TABLE IF NOT EXISTS adoptions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     animal_id INT NOT NULL,
-    period_type ENUM('daily', 'monthly', 'yearly') NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
+    animal_name VARCHAR(100) NOT NULL,
+    period_type ENUM('1_day', '1_month', '1_year') NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    adoption_date DATE NOT NULL,
     status ENUM('pending', 'active', 'completed', 'cancelled') DEFAULT 'pending',
+    name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    city VARCHAR(100),
+    address TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (animal_id) REFERENCES animals(id),
     INDEX idx_user (user_id),
     INDEX idx_animal (animal_id),
-    INDEX idx_dates (start_date, end_date)
+    INDEX idx_adoption_date (adoption_date)
 )";
 
 if (mysqli_query($conn, $sql_adoptions)) {
-    echo "Table `adoptions` created successfully.<br>";
+    echo "Table `adoptions` created successfully with new structure.<br>";
 } else {
     echo "Error creating adoptions table: " . mysqli_error($conn) . "<br>";
 }

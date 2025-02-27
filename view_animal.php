@@ -535,6 +535,7 @@ if (isset($_GET['toggle_availability']) && is_numeric($_GET['toggle_availability
                                 <th width="6%">Gender</th>
                                 <th width="6%">Age</th>
                                 <th width="10%">Habitat</th>
+                                <th width="15%">Description</th>
                                 <th width="10%">Health</th>
                                 <th width="8%">Status</th>
                                 <th width="20%">Actions</th>
@@ -556,6 +557,7 @@ if (isset($_GET['toggle_availability']) && is_numeric($_GET['toggle_availability
                                     <td><?php echo htmlspecialchars($animal['gender']); ?></td>
                                     <td><?php echo htmlspecialchars($animal['age']); ?> yrs</td>
                                     <td><?php echo htmlspecialchars($animal['habitat']); ?></td>
+                                    <td><?php echo htmlspecialchars($animal['description']); ?></td>
                                     <td><?php echo htmlspecialchars($animal['health_status']); ?></td>
                                     <td>
                                         <?php if ($animal['available']): ?>

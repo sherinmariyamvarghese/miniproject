@@ -9,6 +9,47 @@ while ($category = $categories->fetch_assoc()) {
     $categoriesData[$category['id']] = $category;
 }
 
+// Add this new PHP function at the top of the file after session_start()
+function addToAdoptionDatabase($conn, $user_id, $animal_id, $animal_name, $period_type, $amount) {
+    $stmt = $conn->prepare("
+        INSERT INTO adoptions 
+        (user_id, animal_id, animal_name, period_type, amount, adoption_date, status) 
+        VALUES (?, ?, ?, ?, ?, CURDATE(), 'pending')
+    ");
+    
+    $stmt->bind_param("iissd", $user_id, $animal_id, $animal_name, $period_type, $amount);
+    return $stmt->execute();
+}
+
+// Add this new AJAX endpoint in the same file
+if (isset($_POST['action']) && $_POST['action'] === 'add_adoption') {
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'message' => 'Please login first']);
+        exit;
+    }
+
+    $animal_id = $_POST['animal_id'];
+    $animal_name = $_POST['animal_name'];
+    $period_type = $_POST['period_type'];
+    $amount = $_POST['amount'];
+    $user_id = $_SESSION['user_id'];
+
+    // Map period types to database enum values
+    $period_map = [
+        'daily' => '1_day',
+        'monthly' => '1_month',
+        'yearly' => '1_year'
+    ];
+    $db_period = $period_map[$period_type];
+
+    if (addToAdoptionDatabase($conn, $user_id, $animal_id, $animal_name, $db_period, $amount)) {
+        echo json_encode(['success' => true, 'message' => 'Added to adoption successfully']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Error adding to adoption']);
+    }
+    exit;
+}
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Process adoption form submission
@@ -118,8 +159,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="?category=all" class="category-tab <?php echo (!isset($_GET['category']) || $_GET['category'] == 'all') ? 'active' : ''; ?>">
             <i class="fas fa-paw"></i> All Animals
         </a>
-        <?php foreach($categoriesData as $category): ?>
-            <a href="?category=<?php echo $category['id']; ?>" class="category-tab <?php echo (isset($_GET['category']) && $_GET['category'] == $category['id']) ? 'active' : ''; ?>">
+        <?php 
+        // Sort categories to put Mammals first
+        $sortedCategories = $categoriesData;
+        uasort($sortedCategories, function($a, $b) {
+            if ($a['name'] === 'Mammals') return -1;
+            if ($b['name'] === 'Mammals') return 1;
+            return strcmp($a['name'], $b['name']);
+        });
+        
+        foreach($sortedCategories as $category): 
+        ?>
+            <a href="?category=<?php echo $category['id']; ?>" 
+               class="category-tab <?php echo (isset($_GET['category']) && $_GET['category'] == $category['id']) ? 'active' : ''; ?>">
                 <?php
                 // Assign appropriate icon based on category name
                 $icon_class = 'fas fa-paw'; // Default icon
@@ -158,7 +210,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Loop through each category if viewing all, otherwise just show selected category
         if (!isset($_GET['category']) || $_GET['category'] == 'all') {
-            foreach($categoriesData as $category) {
+            // Sort categories to put Mammals first
+            $sortedCategories = $categoriesData;
+            uasort($sortedCategories, function($a, $b) {
+                if ($a['name'] === 'Mammals') return -1;
+                if ($b['name'] === 'Mammals') return 1;
+                return strcmp($a['name'], $b['name']);
+            });
+            
+            foreach($sortedCategories as $category) {
                 displayCategoryAnimals($conn, $category);
             }
         } else if (isset($_GET['category']) && $_GET['category'] != 'all' && is_numeric($_GET['category'])) {
@@ -255,14 +315,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                     data-daily="<?php echo $animal['daily_rate']; ?>"
                                                     data-monthly="<?php echo $animal['monthly_rate']; ?>"
                                                     data-yearly="<?php echo $animal['yearly_rate']; ?>">
-                                                <option value="daily">Daily (₹<?php echo number_format($animal['daily_rate']); ?>)</option>
-                                                <option value="monthly">Monthly (₹<?php echo number_format($animal['monthly_rate']); ?>)</option>
-                                                <option value="yearly">Yearly (₹<?php echo number_format($animal['yearly_rate']); ?>)</option>
+                                                <option value="daily"> 1 Day (₹<?php echo number_format($animal['daily_rate']); ?>)</option>
+                                                <option value="monthly"> 1 Month(₹<?php echo number_format($animal['monthly_rate']); ?>)</option>
+                                                <option value="yearly">1 Year(₹<?php echo number_format($animal['yearly_rate']); ?>)</option>
                                             </select>
                                         </div>
                                         <div class="button-group">
                                             <button type="button" 
-                                                    class="adopt-button"
+                                                    class="adopt-button" 
                                                     onclick="addToAdoption(
                                                         <?php echo $animal['id']; ?>, 
                                                         '<?php echo htmlspecialchars($animal['name']); ?>'
@@ -449,6 +509,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Adds an animal to the adoption summary
     function addToAdoption(animalId, animalName) {
+        // Check if user is logged in
+        <?php if (!isset($_SESSION['user_id'])): ?>
+            window.location.href = 'login.php';
+            return;
+        <?php endif; ?>
+
         const periodSelect = document.querySelector(`.period-select[data-animal-id="${animalId}"]`);
         const period = periodSelect.value;
         
@@ -465,24 +531,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 rate = parseFloat(periodSelect.dataset.yearly);
                 break;
         }
-        
-        // Add to adoptions object
-        adoptions[animalId] = {
-            name: animalName,
-            period: period,
-            periodDisplay: period.charAt(0).toUpperCase() + period.slice(1),
-            rate: rate,
-            quantity: 1  // Default quantity
-        };
-        
-        // Save to localStorage
-        localStorage.setItem('adoptions', JSON.stringify(adoptions));
-        
-        // Update summary table
-        updateSummaryTable();
-        
-        // Show success message
-        alert(`${animalName} has been added to your adoption list!`);
+
+        // Send AJAX request to add to database
+        fetch('adoption.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=add_adoption&animal_id=${animalId}&animal_name=${encodeURIComponent(animalName)}&period_type=${period}&amount=${rate}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Add to local storage for current session
+                adoptions[animalId] = {
+                    name: animalName,
+                    period: period,
+                    periodDisplay: period.charAt(0).toUpperCase() + period.slice(1),
+                    rate: rate,
+                    quantity: 1
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('adoptions', JSON.stringify(adoptions));
+                
+                // Update summary table
+                updateSummaryTable();
+                
+                // Show success message
+                alert(`${animalName} has been added to your adoption list!`);
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding to adoption. Please try again.');
+        });
     }
     
     // Updates the adoption summary table
@@ -689,6 +774,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Redirect to adoption payment page
         window.location.href = 'adoption-payment.php';
+    });
+
+    // Add this function to load user's adoptions when page loads
+    function loadUserAdoptions() {
+        fetch('get_user_adoptions.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    adoptions = {};
+                    data.adoptions.forEach(adoption => {
+                        adoptions[adoption.animal_id] = {
+                            name: adoption.animal_name,
+                            period: adoption.period_type,
+                            periodDisplay: adoption.period_type.charAt(0).toUpperCase() + adoption.period_type.slice(1),
+                            rate: parseFloat(adoption.amount),
+                            quantity: 1
+                        };
+                    });
+                    localStorage.setItem('adoptions', JSON.stringify(adoptions));
+                    updateSummaryTable();
+                }
+            });
+    }
+
+    // Call loadUserAdoptions when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUserAdoptions();
     });
 </script>
 

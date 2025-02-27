@@ -11,6 +11,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSI
 // User status update logic
 if (isset($_POST['update_status'])) {
     $user_id = $_POST['user_id'];
+    $new_status = $_POST['new_status'];
     
     // Start transaction
     $conn->begin_transaction();
@@ -24,9 +25,9 @@ if (isset($_POST['update_status'])) {
         $user = $result->fetch_assoc();
         
         if ($user && $user['role'] !== 'admin') {
-            // Update user status to inactive
-            $update_status_stmt = $conn->prepare("UPDATE users SET status = 'inactive' WHERE id = ?");
-            $update_status_stmt->bind_param("i", $user_id);
+            // Update user status
+            $update_status_stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
+            $update_status_stmt->bind_param("si", $new_status, $user_id);
             
             if (!$update_status_stmt->execute()) {
                 throw new Exception("Error updating user status: " . $update_status_stmt->error);
@@ -36,7 +37,7 @@ if (isset($_POST['update_status'])) {
             
             // If we got here, everything worked
             $conn->commit();
-            $_SESSION['message'] = "User status updated to inactive successfully";
+            $_SESSION['message'] = "User status updated to " . $new_status . " successfully";
             
         } else {
             $conn->rollback();
@@ -58,7 +59,16 @@ if (isset($_POST['update_status'])) {
 $stats = array();
 
 // Total adoptions
-$query = "SELECT COUNT(*) as total, SUM(COALESCE(amount, 0)) as total_amount FROM adoptions";
+$query = "SELECT 
+    COUNT(*) as total,
+    SUM(CASE 
+        WHEN period_type = '1_day' THEN a.daily_rate
+        WHEN period_type = '1_month' THEN a.monthly_rate
+        WHEN period_type = '1_year' THEN a.yearly_rate
+        ELSE 0
+    END) as total_amount
+    FROM adoptions ad
+    JOIN animals a ON ad.animal_id = a.id";
 $result = $conn->query($query);
 $adoption_stats = $result->fetch_assoc();
 $stats['adoptions'] = $adoption_stats;
@@ -393,6 +403,21 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
                 padding: 1rem;
             }
         }
+
+        .activate-btn {
+            background: #28a745;
+            color: var(--white);
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .activate-btn:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
@@ -528,10 +553,13 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
                         </td>
                         <td><?= date('Y-m-d H:i', strtotime($user['created_at'])) ?></td>
                         <td>
-                            <?php if ($user['role'] !== 'admin' && $user['status'] === 'active'): ?>
-                                <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to deactivate this user?');">
+                            <?php if ($user['role'] !== 'admin'): ?>
+                                <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to <?= $user['status'] === 'active' ? 'deactivate' : 'activate' ?> this user?');">
                                     <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                    <button type="submit" name="update_status" class="deactivate-btn">Deactivate</button>
+                                    <input type="hidden" name="new_status" value="<?= $user['status'] === 'active' ? 'inactive' : 'active' ?>">
+                                    <button type="submit" name="update_status" class="<?= $user['status'] === 'active' ? 'deactivate-btn' : 'activate-btn' ?>">
+                                        <?= $user['status'] === 'active' ? 'Deactivate' : 'Activate' ?>
+                                    </button>
                                 </form>
                             <?php endif; ?>
                         </td>
