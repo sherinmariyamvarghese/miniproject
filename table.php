@@ -217,6 +217,35 @@ if (mysqli_query($conn, $sql_newsletter)) {
     echo "Error creating newsletter_subscribers table: " . mysqli_error($conn) . "<br>";
 }
 
+// Create ticket_rates table
+$sql_ticket_rates = "CREATE TABLE IF NOT EXISTS ticket_rates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    adult_rate DECIMAL(10,2) NOT NULL,
+    child_5_12_rate DECIMAL(10,2) NOT NULL,
+    senior_rate DECIMAL(10,2) NOT NULL,
+    camera_rate DECIMAL(10,2) NOT NULL,
+    max_tickets_per_day INT NOT NULL DEFAULT 100,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)";
+
+if (mysqli_query($conn, $sql_ticket_rates)) {
+    echo "Table `ticket_rates` created successfully.<br>";
+    
+    // Insert default rates if table is empty
+    $check_rates = mysqli_query($conn, "SELECT COUNT(*) as count FROM ticket_rates");
+    $row = mysqli_fetch_assoc($check_rates);
+    
+    if ($row['count'] == 0) {
+        $sql_default_rates = "INSERT INTO ticket_rates 
+            (adult_rate, child_5_12_rate, senior_rate, camera_rate, max_tickets_per_day) 
+            VALUES (80.00, 40.00, 40.00, 100.00, 100)";
+        mysqli_query($conn, $sql_default_rates);
+        echo "Default ticket rates added.<br>";
+    }
+} else {
+    echo "Error creating ticket_rates table: " . mysqli_error($conn) . "<br>";
+}
+
 echo "<br>All tables have been created successfully. You can now:";
 echo "<br>1. <a href='register.php'>Register users</a>";
 echo "<br>2. <a href='add_animal.php'>Add animals</a>";

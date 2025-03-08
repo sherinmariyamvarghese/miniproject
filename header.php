@@ -8,7 +8,7 @@
         <a href="d.php"><i class="fas fa-hand-holding-usd"></i> donation</a>
         <a href="booking.php"><i class="fas fa-ticket-alt"></i> booking</a>
         <a href="index.php#gallery"><i class="fas fa-images"></i> gallery</a>
-        <a href="index.php#animal"><i class="fas fa-envelope"></i> animal</a>
+        <a href="index.php#animal"><i class="fas fa-paw"></i> animal</a>
     </nav>
 
     <div class="icons">

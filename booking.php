@@ -19,6 +19,9 @@ function getTotalBookingsForDate($conn, $date) {
 
 $errors = [];
 
+// At the top of the file, after session_start()
+$rates = $conn->query("SELECT * FROM ticket_rates WHERE id = 1")->fetch_assoc();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Store booking data in session
     $_SESSION['booking'] = [
@@ -131,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h3>Select Tickets</h3>
                 
                 <div class="ticket-row">
-                    <label>Adult (₹80)</label>
+                    <label>Adult (₹<?php echo $rates['adult_rate']; ?>)</label>
                     <input type="number" name="adult-tickets" min="0" value="0" onchange="calculateTotal()">
                 </div>
 
@@ -141,19 +144,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="ticket-row">
-                    <label>Child (5-12 Years) (₹40)</label>
+                    <label>Child (5-12 Years) (₹<?php echo $rates['child_5_12_rate']; ?>)</label>
                     <input type="number" name="child-5-12-tickets" min="0" value="0" onchange="calculateTotal()">
                 </div>
 
                 <div class="ticket-row">
-                    <label>Senior Citizen (₹40)</label>
-                    <input type="number" name="senior-citizen-tickets" min="0" value="0" onchange="calculateTotal()">
+                    <label>Senior Citizen (₹<?php echo $rates['senior_rate']; ?>)</label>
+                    <input type="number" name="senior-tickets" min="0" value="0" onchange="calculateTotal()">
                 </div>
 
                 <div class="ticket-row">
                     <label>
                         <input type="checkbox" name="camera-video" onchange="calculateTotal()">
-                        Camera/Video Access (₹100)
+                        Camera/Video Access (₹<?php echo $rates['camera_rate']; ?>)
                     </label>
                 </div>
             </div>
@@ -183,13 +186,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
+        const rates = {
+            adult: <?php echo $rates['adult_rate']; ?>,
+            child_5_12: <?php echo $rates['child_5_12_rate']; ?>,
+            senior: <?php echo $rates['senior_rate']; ?>,
+            camera: <?php echo $rates['camera_rate']; ?>
+        };
+
         function calculateTotal() {
             const adultTickets = parseInt(document.querySelector('[name="adult-tickets"]').value) || 0;
             const child5Tickets = parseInt(document.querySelector('[name="child-5-12-tickets"]').value) || 0;
-            const seniorTickets = parseInt(document.querySelector('[name="senior-citizen-tickets"]').value) || 0;
+            const seniorTickets = parseInt(document.querySelector('[name="senior-tickets"]').value) || 0;
             const cameraVideo = document.querySelector('[name="camera-video"]').checked;
 
-            const total = (adultTickets * 80) + (child5Tickets * 40) + (seniorTickets * 40) + (cameraVideo ? 100 : 0);
+            const total = (adultTickets * rates.adult) + 
+                         (child5Tickets * rates.child_5_12) + 
+                         (seniorTickets * rates.senior) + 
+                         (cameraVideo ? rates.camera : 0);
+            
             document.getElementById('totalAmount').textContent = total;
         }
 

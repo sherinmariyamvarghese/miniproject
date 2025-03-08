@@ -451,28 +451,41 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
                 </ul>
             </li>
 
+            <li class="menu-header">Bookings</li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle">
+                    <i class="fas fa-ticket-alt"></i> Bookings
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+                <ul class="dropdown-menu <?= in_array(basename($_SERVER['PHP_SELF']), ['manage_ticket_rates.php', 'view_bookings.php']) ? 'show' : '' ?>">
+                    <li>
+                        <a href="manage_ticket_rates.php" class="<?= basename($_SERVER['PHP_SELF']) == 'manage_ticket_rates.php' ? 'active' : '' ?>">
+                            <i class="fas fa-money-bill"></i> Manage Ticket Rates
+                        </a>
+                    </li>
+                    <li>
+                        <a href="view_bookings.php" class="<?= basename($_SERVER['PHP_SELF']) == 'view_bookings.php' ? 'active' : '' ?>">
+                            <i class="fas fa-list"></i> View Bookings
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
             <li class="menu-header">Adoptions</li>
             <li>
                 <a href="" class="<?= basename($_SERVER['PHP_SELF']) == '' ? 'active' : '' ?>">
                     <i class="fas fa-heart"></i> View Adoptions
                 </a>
             </li>
+
             <li class="menu-header">Donations</li>
             <li>
                 <a href="" class="<?= basename($_SERVER['PHP_SELF']) == '' ? 'active' : '' ?>">
                     <i class="fas fa-heart"></i> View Donation
                 </a>
             </li>
-            <!-- <li class="menu-header">Users</li>
-            <li>
-                <a href="" class="<?= basename($_SERVER['PHP_SELF']) == '' ? 'active' : '' ?>">
-                    <i class="fas fa-users"></i> Manage Users
-                </a>
-            </li> -->
 
             <li class="menu-header">Settings</li>
-            <li>
-                
             <li>
                 <a href="logout.php">
                     <i class="fas fa-sign-out-alt"></i> Logout

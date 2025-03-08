@@ -374,27 +374,8 @@ if (empty($pendingAdoptions)) {
                 </select>
             </div>
 
-            <button type="submit" class="confirm-btn">Confirm Payment</button>
+            <!-- <button type="submit" class="confirm-btn">Confirm Payment</button> -->
         </form>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const summaryDiv = document.getElementById('adoptionSummary');
-            let totalAmount = 0;
-
-            // Display pending adoptions from PHP
-            <?php foreach ($pendingAdoptions as $adoption): ?>
-                totalAmount += <?php echo $adoption['amount']; ?>;
-                summaryDiv.innerHTML += `
-                    <p><?php echo $adoption['animal_name']; ?> - 
-                       <?php echo ucfirst(str_replace('_', ' ', $adoption['period_type'])); ?> 
-                       (₹<?php echo number_format($adoption['amount']); ?>)</p>
-                `;
-            <?php endforeach; ?>
-
-            summaryDiv.innerHTML += `<h4>Total Amount: ₹${totalAmount.toLocaleString()}</h4>`
-        });
-    </script>
 </body>
 </html>

@@ -165,8 +165,8 @@ include 'connect.php';
                     <p>As an animal adopter, you'll receive:</p>
                     <ul class="highlights">
                         <li>Personalized adoption certificate</li>
-                        <li>Regular updates about your adopted animal</li>
-                        <li>A fact sheet about your adopted species</li>
+                        <!-- <li>Regular updates about your adopted animal</li>
+                        <li>A fact sheet about your adopted species</li> -->
                     </ul>
                 </div>
             </div>

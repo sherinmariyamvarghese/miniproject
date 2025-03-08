@@ -1,10 +1,10 @@
 <section class="footer">
     <div class="box-container">
         <div class="box">
-            <h3><i class="fas fa-paw"></i>Safari Park</h3>
+            <h3><i class="fas fa-paw"></i>SafariGate</h3>
             <p>Experience the wonders of nature and wildlife in a safe and educational environment.</p>
             <p class="links"><i class="fas fa-clock"></i>Open Daily</p>
-            <p class="days">9:00 AM - 6:00 PM</p>
+            <p class="days">9:00 AM - 11:00 PM</p>
         </div>
 
         <div class="box">

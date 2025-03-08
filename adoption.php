@@ -50,6 +50,28 @@ if (isset($_POST['action']) && $_POST['action'] === 'add_adoption') {
     exit;
 }
 
+// Add this new AJAX endpoint near the top of the file with other endpoints
+if (isset($_POST['action']) && $_POST['action'] === 'remove_adoption') {
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'message' => 'Please login first']);
+        exit;
+    }
+
+    $animal_id = $_POST['animal_id'];
+    $user_id = $_SESSION['user_id'];
+
+    // Delete from database
+    $stmt = $conn->prepare("DELETE FROM adoptions WHERE user_id = ? AND animal_id = ? AND status = 'pending'");
+    $stmt->bind_param("ii", $user_id, $animal_id);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Removed from adoption successfully']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Error removing from adoption']);
+    }
+    exit;
+}
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Process adoption form submission
@@ -616,16 +638,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Removes an animal from the adoption summary
     function removeFromAdoption(animalId) {
-        delete adoptions[animalId];
-        
-        // Update localStorage
-        if (Object.keys(adoptions).length > 0) {
-            localStorage.setItem('adoptions', JSON.stringify(adoptions));
-        } else {
-            localStorage.removeItem('adoptions');
-        }
-        
-        updateSummaryTable();
+        // Send AJAX request to remove from database
+        fetch('adoption.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=remove_adoption&animal_id=${animalId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove from local storage
+                delete adoptions[animalId];
+                
+                // Update localStorage
+                if (Object.keys(adoptions).length > 0) {
+                    localStorage.setItem('adoptions', JSON.stringify(adoptions));
+                } else {
+                    localStorage.removeItem('adoptions');
+                }
+                
+                // Update the display
+                updateSummaryTable();
+                
+                // Show success message
+                alert(data.message);
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing from adoption. Please try again.');
+        });
     }
 
     // Function to get health status color
@@ -773,7 +819,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         sessionStorage.setItem('adoptions', JSON.stringify(adoptions));
         
         // Redirect to adoption payment page
-        window.location.href = 'adoption-payment.php';
+        // window.location.href = 'adoption-payment.php';
     });
 
     // Add this function to load user's adoptions when page loads
