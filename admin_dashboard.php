@@ -473,15 +473,15 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
 
             <li class="menu-header">Adoptions</li>
             <li>
-                <a href="" class="<?= basename($_SERVER['PHP_SELF']) == '' ? 'active' : '' ?>">
+                <a href="view_adoptions.php" class="<?= basename($_SERVER['PHP_SELF']) == 'view_adoptions.php' ? 'active' : '' ?>">
                     <i class="fas fa-heart"></i> View Adoptions
                 </a>
             </li>
 
             <li class="menu-header">Donations</li>
             <li>
-                <a href="" class="<?= basename($_SERVER['PHP_SELF']) == '' ? 'active' : '' ?>">
-                    <i class="fas fa-heart"></i> View Donation
+                <a href="admin_donations.php" class="<?= basename($_SERVER['PHP_SELF']) == 'admin_donations.php' ? 'active' : '' ?>">
+                    <i class="fas fa-hand-holding-heart"></i> View Donations
                 </a>
             </li>
 

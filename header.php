@@ -9,13 +9,18 @@
         <a href="booking.php"><i class="fas fa-ticket-alt"></i> booking</a>
         <a href="index.php#gallery"><i class="fas fa-images"></i> gallery</a>
         <a href="index.php#animal"><i class="fas fa-paw"></i> animal</a>
+        <!-- <span  class="headin">Welcome, <?php echo htmlspecialchars($_SESSION['user']); ?></span> -->
+        <span style="font-weight: bold; font-size: 16px;">
+    Welcome, <?php echo htmlspecialchars($_SESSION['user']); ?>
+</span>
+
     </nav>
 
     <div class="icons">
         <?php if(isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
             <div id="login-btn" class="fas fa-user">
                 <form class="login-form">
-                    <span>Welcome, <?php echo htmlspecialchars($_SESSION['user']); ?></span>
+                    
                     <a href="profile.php" class="btn">Profile</a>
                     <a href="logout.php" class="btn">Logout</a>
                 </form>

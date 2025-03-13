@@ -224,8 +224,9 @@ $sql_ticket_rates = "CREATE TABLE IF NOT EXISTS ticket_rates (
     child_5_12_rate DECIMAL(10,2) NOT NULL,
     senior_rate DECIMAL(10,2) NOT NULL,
     camera_rate DECIMAL(10,2) NOT NULL,
+
     max_tickets_per_day INT NOT NULL DEFAULT 100,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )";
 
 if (mysqli_query($conn, $sql_ticket_rates)) {
@@ -245,6 +246,13 @@ if (mysqli_query($conn, $sql_ticket_rates)) {
 } else {
     echo "Error creating ticket_rates table: " . mysqli_error($conn) . "<br>";
 }
+$alter_table_query = "ALTER TABLE ticket_rates ADD COLUMN booked_ticket INT NOT NULL DEFAULT 0";
+if (mysqli_query($conn, $alter_table_query)) {
+    echo "added.<br>";
+} else {
+    echo "Error booked_ticket`: " . mysqli_error($conn);
+}
+
 
 echo "<br>All tables have been created successfully. You can now:";
 echo "<br>1. <a href='register.php'>Register users</a>";
