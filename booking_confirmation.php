@@ -312,64 +312,67 @@ function sendBookingConfirmations($booking) {
 }
 
 function processBookingConfirmation($booking_details) {
+    $status = ['email' => false, 'sms' => false];
+    
     try {
-        // Add debug logging
-        error_log("Processing booking confirmation for:");
-        error_log(print_r($booking_details, true));
+        // Create PHPMailer instance
+        $mail = new PHPMailer(true);
         
-        // Create directories if they don't exist
-        $directories = [
-            'uploads/qrcodes',
-            'uploads/tickets'
-        ];
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';  // Updated to Gmail SMTP
+        $mail->SMTPAuth = true;
+        $mail->Username = 'sherinmariyamvarghese@gmail.com';
+        $mail->Password = 'uhfo rkzj aewm kdpb';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
 
-        foreach ($directories as $dir) {
-            if (!file_exists($dir)) {
-                mkdir($dir, 0777, true);
-            }
+        // Enable debug mode
+        $mail->SMTPDebug = SMTP::DEBUG_SERVER;
+        $mail->Debugoutput = function($str, $level) {
+            error_log("PHPMailer ($level): $str");
+        };
+
+        // Recipients
+        $mail->setFrom('sherinmariyamvarghese@gmail.com', 'SafariGate Zoo');
+        $mail->addAddress($booking_details['email'], $booking_details['name']);
+
+        // Attach PDF bill if it exists
+        if (isset($booking_details['bill_pdf_path']) && file_exists($booking_details['bill_pdf_path'])) {
+            $mail->addAttachment($booking_details['bill_pdf_path'], 'SafariGate_Zoo_Invoice.pdf');
         }
 
-        // Validate booking details
-        $required_fields = [
-            'booking_id', 
-            'visit_date', 
-            'name', 
-            'email', 
-            'phone',
-            'adult_tickets', 
-            'child_0_5_tickets', 
-            'child_5_12_tickets',
-            'senior_tickets', 
-            'total_amount'
-        ];
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = 'Booking Confirmation - SafariGate Zoo';
+        $mail->Body = generateEmailTemplate($booking_details);
 
-        foreach ($required_fields as $field) {
-            if (empty($booking_details[$field])) {
-                error_log("Missing or empty required field: $field");
-                throw new Exception("Required booking information is missing: $field");
-            }
-        }
-
-        // Log the start of confirmation process
-        error_log("Starting booking confirmation process for booking ID: " . $booking_details['booking_id']);
-
-        $status = sendBookingConfirmations($booking_details);
-        
-        // Store the notification status in the session
-        if (!isset($_SESSION)) {
-            session_start();
-        }
-        $_SESSION['notification_status'] = $status;
-        
-        // Log the completion status
-        error_log("Completed booking confirmation process. Status: " . json_encode($status));
-        
-        return $status;
-
+        $mail->send();
+        $status['email'] = true;
+        error_log("Email sent successfully to: " . $booking_details['email']);
     } catch (Exception $e) {
-        error_log("Error in processBookingConfirmation: " . $e->getMessage());
-        throw $e;
+        error_log("Email sending failed: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
     }
+
+    return $status;
+}
+
+function generateEmailTemplate($booking_details) {
+    // Create HTML email template
+    $html = "
+    <h2>Thank you for your booking!</h2>
+    <p>Dear {$booking_details['name']},</p>
+    <p>Your booking has been confirmed. Please find your booking details below:</p>
+    <ul>
+        <li>Booking ID: {$booking_details['booking_id']}</li>
+        <li>Visit Date: " . date('d/m/Y', strtotime($booking_details['visit_date'])) . "</li>
+        <li>Total Amount: ₹" . number_format($booking_details['total_amount'], 2) . "</li>
+    </ul>
+    <p>Please find your invoice attached to this email.</p>
+    ";
+    
+    return $html;
 }
 
 // Only process if this file is included, not directly accessed

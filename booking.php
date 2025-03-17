@@ -845,7 +845,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p>Before you book, please note:</p>
             <ul>
                 <li><i class="fas fa-times-circle"></i> The zoo is closed every Monday for maintenance</li>
-                <li><i class="fas fa-clock"></i> Opening hours: 9:00 AM - 5:00 PM (Last entry at 4:00 PM)</li>
+                <li><i class="fas fa-clock"></i> Opening hours: 9:00 AM - 5:00 PM</li>
                 <li><i class="fas fa-id-card"></i> Please bring a valid photo ID proof for verification</li>
                 <li><i class="fas fa-child"></i> Children below 12 years must be accompanied by an adult</li>
             </ul>

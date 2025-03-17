@@ -109,411 +109,179 @@ $bookings = $result->fetch_all(MYSQLI_ASSOC);
         .booking-card {
             background: var(--white);
             border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             position: relative;
-            transform-style: preserve-3d;
-            perspective: 1000px;
+            overflow: hidden;
         }
 
-        .booking-card:hover {
-            transform: translateY(-10px) rotate(1deg);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-        
-        /* Ticket design elements */
-        .booking-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 15px;
-            right: 15px;
-            height: 20px;
-            border-radius: 0 0 15px 15px;
-            background-color: var(--main);
-        }
-        
         .ticket-stub {
+            background: var(--main);
+            width: 20px;
+            height: 100%;
             position: absolute;
-            top: 0;
-            bottom: 0;
             left: 0;
-            width: 30px;
-            background: repeating-linear-gradient(
-                45deg,
-                var(--main),
-                var(--main) 10px,
-                #ff7b3a 10px,
-                #ff7b3a 20px
-            );
-            z-index: 1;
         }
-        
-        .ticket-stub::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: 0;
-            width: 15px;
-            height: 30px;
-            background-color: var(--white);
-            border-radius: 15px 0 0 15px;
-            transform: translateY(-50%);
-        }
-        
+
         .ticket-holes {
             position: absolute;
-            top: 0;
-            right: 20px;
-            height: 100%;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
             flex-direction: column;
-            justify-content: space-around;
+            gap: 30px;
             z-index: 1;
         }
-        
+
         .ticket-hole {
             width: 20px;
             height: 20px;
-            background-color: var(--white);
+            background: var(--bg);
             border-radius: 50%;
-            border: 1px dashed #ccc;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .booking-image {
-            height: 250px;
-            overflow: hidden;
-            position: relative;
+        .booking-content {
+            margin-left: 20px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 30px;
         }
 
-        .booking-image::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        .qr-container {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            border-right: 1px dashed #ddd;
         }
 
-        .booking-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s ease;
+        .qr-code {
+            width: 150px;
+            height: 150px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-        
-        .booking-card:hover .booking-image img {
-            transform: scale(1.1);
+
+        .qr-info {
+            text-align: center;
         }
-        
-        .animal-info {
-            position: absolute;
-            bottom: 10px;
-            left: 15px;
-            color: white;
+
+        .qr-info span {
+            display: block;
             font-size: 1.4rem;
-            font-weight: bold;
-            z-index: 1;
+            font-weight: 500;
+            color: var(--main);
+        }
+
+        .qr-info small {
+            font-size: 1.2rem;
+            color: #666;
         }
 
         .booking-status {
             position: absolute;
-            top: 25px;
-            right: 15px;
+            top: 20px;
+            right: 20px;
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 1.4rem;
-            font-weight: bold;
-            z-index: 1;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-
-        .status-upcoming {
-            background: #e3f2fd;
-            color: #1976d2;
-            border: 1px solid #bbdefb;
-        }
-
-        .status-today {
-            background: #fff8e1;
-            color: #ff8f00;
-            border: 1px solid #ffe082;
-        }
-
-        .status-completed {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
-        }
-
-        .status-cancelled {
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #ffcdd2;
+            font-weight: 500;
         }
 
         .booking-details {
-            padding: 25px 20px 20px 40px;
+            padding: 0 20px;
         }
 
         .booking-date {
-            font-size: 2.2rem;
+            font-size: 2rem;
             color: var(--main);
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px dashed #ddd;
-            padding-bottom: 15px;
         }
 
-        .booking-date i {
-            margin-right: 10px;
-            color: #ff6b22;
-        }
-        
         .booking-number {
             font-size: 1.4rem;
             color: #666;
-            margin-bottom: 15px;
-            font-family: "Courier New", monospace;
-            letter-spacing: 1px;
+            margin-bottom: 20px;
         }
 
         .ticket-info {
-            margin: 15px 0;
-            padding: 15px;
             background: var(--bg);
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .ticket-info::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('images/paw-pattern.png');
-            opacity: 0.05;
-            pointer-events: none;
+            padding: 20px;
+            border-radius: 10px;
         }
 
         .ticket-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
-            font-size: 1.5rem;
-            color: var(--black);
-        }
-        
-        .ticket-row span:first-child {
-            font-weight: 500;
+            font-size: 1.4rem;
         }
 
         .total-amount {
-            font-size: 2rem;
-            color: var(--main);
-            font-weight: bold;
             margin-top: 15px;
             padding-top: 15px;
             border-top: 1px dashed #ddd;
-            display: flex;
-            justify-content: space-between;
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--main);
         }
 
         .booking-actions {
-            padding: 15px 20px 15px 40px;
-            background: #f8f9fa;
+            padding: 20px;
+            padding-left: 40px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            gap: 15px;
             border-top: 1px solid #eee;
         }
 
         .action-btn {
             padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 1.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 5px;
+            font-size: 1.4rem;
             display: flex;
             align-items: center;
-            justify-content: center;
-        }
-        
-        .action-btn i {
-            margin-right: 8px;
+            gap: 8px;
         }
 
         .view-btn {
             background: var(--main);
-            color: var(--white);
-            border: none;
-        }
-
-        .view-btn:hover {
-            background: #ff5500;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 107, 34, 0.3);
+            color: white;
         }
 
         .cancel-btn {
-            background: #fff;
+            background: white;
             color: #dc3545;
             border: 1px solid #dc3545;
         }
 
-        .cancel-btn:hover {
-            background: #dc3545;
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-
-        .no-bookings {
-            text-align: center;
-            padding: 60px 40px;
-            background: var(--white);
-            border-radius: 15px;
-            margin: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .no-bookings::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('images/paw-pattern.png');
-            opacity: 0.05;
-            pointer-events: none;
-        }
-
-        .no-bookings i {
-            font-size: 6rem;
-            color: var(--main);
-            margin-bottom: 25px;
-            display: block;
-        }
-
-        .no-bookings h3 {
-            font-size: 2.8rem;
-            color: var(--black);
-            margin-bottom: 15px;
-        }
-
-        .no-bookings p {
-            font-size: 1.8rem;
-            color: #666;
-            margin-bottom: 30px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .book-now-btn {
-            display: inline-block;
-            padding: 15px 40px;
-            background: var(--main);
-            color: var(--white);
-            border-radius: 50px;
-            font-size: 1.8rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(255, 107, 34, 0.3);
-        }
-
-        .book-now-btn:hover {
-            background: #ff5500;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 107, 34, 0.4);
-        }
-        
-        .qr-code {
-            position: absolute;
-            right: 20px;
-            top: 25px;
-            width: 60px;
-            height: 60px;
-            background: url('images/qr-placeholder.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            opacity: 0.8;
-        }
-        
-        .ticket-stamp {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: rotate(-15deg);
-            opacity: 0.6;
-            font-family: "Arial", sans-serif;
-        }
-        
-        .ticket-stamp-inner {
-            width: 100%;
-            height: 100%;
-            border: 2px dashed #999;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #c62828;
-            font-weight: bold;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            padding: 10px;
-            text-align: center;
-        }
-        
-        .animal-category {
-            position: absolute;
-            top: 25px;
-            left: 40px;
-            padding: 5px 15px;
-            background: rgba(255, 107, 34, 0.9);
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 4px;
-            z-index: 1;
-        }
-
         @media (max-width: 768px) {
-            .bookings-grid {
+            .booking-content {
                 grid-template-columns: 1fr;
             }
-            
-            .ticket-stub {
-                width: 20px;
+
+            .qr-container {
+                border-right: none;
+                border-bottom: 1px dashed #ddd;
+                padding-bottom: 20px;
             }
-            
+
             .booking-details {
-                padding-left: 30px;
+                padding: 0;
             }
-            
+
             .booking-actions {
-                padding-left: 30px;
                 flex-direction: column;
-                gap: 10px;
             }
-            
+
             .action-btn {
                 width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -554,18 +322,18 @@ $bookings = $result->fetch_all(MYSQLI_ASSOC);
                             }
                             
                             // Get animal category for image
-                            $animal_category = strtolower($booking['animal_experience'] ?? 'general');
+                            $animal_category = strtolower($booking['animal_experience'] ?? '');
                             $animal_images = [
                                 'big cats' => 'tiger-experience.jpg',
                                 'primates' => 'monkey-experience.jpg',
                                 'elephants' => 'elephant-experience.jpg',
                                 'reptiles' => 'reptile-experience.jpg',
                                 'birds' => 'bird-experience.jpg',
-                                'aquatic' => 'aquatic-experience.jpg',
-                                'general' => 'safari-experience.jpg'
+                                'aquatic' => 'aquatic-experience.jpg'
                             ];
                             
-                            $image = isset($animal_images[$animal_category]) ? $animal_images[$animal_category] : 'safari-experience.jpg';
+                            // Default to first available category if not set
+                            $image = isset($animal_images[$animal_category]) ? $animal_images[$animal_category] : array_values($animal_images)[0];
                         ?>
                         <div class="booking-card">
                             <div class="ticket-stub"></div>
@@ -579,65 +347,74 @@ $bookings = $result->fetch_all(MYSQLI_ASSOC);
                                 <?php echo $status_text; ?>
                             </div>
                             
-                            <div class="booking-image">
-                                <img src="images/<?php echo $image; ?>" alt="<?php echo htmlspecialchars($booking['animal_experience'] ?? 'General'); ?> Experience">
-                                <span class="animal-category"><?php echo htmlspecialchars($booking['animal_experience'] ?? 'General'); ?></span>
-                                <div class="animal-info">
-                                    <i class="fas fa-paw"></i> <?php echo htmlspecialchars($booking['animal_experience'] ?? 'General'); ?> Experience
-                                </div>
-                            </div>
-                            
-                            <div class="qr-code" title="Scan this at the entrance"></div>
-                            
-                            <div class="booking-details">
-                                <div class="booking-date">
-                                    <i class="far fa-calendar-alt"></i> <?php echo date('F d, Y', strtotime($booking['visit_date'])); ?>
+                            <div class="booking-content">
+                                <div class="qr-container">
+                                    <?php
+                                    $qr_file = 'uploads/qrcodes/booking_' . $booking['id'] . '.png';
+                                    ?>
+                                    <img src="<?php echo $qr_file; ?>" alt="Booking QR Code" class="qr-code">
+                                    <div class="qr-info">
+                                        <span>Scan for Entry</span>
+                                        <small>Booking #<?php echo str_pad($booking['id'], 6, '0', STR_PAD_LEFT); ?></small>
+                                    </div>
                                 </div>
                                 
-                                <div class="booking-number">
-                                    <i class="fas fa-hashtag"></i> TICKET #<?php echo str_pad($booking['id'], 6, '0', STR_PAD_LEFT); ?>
-                                </div>
-                                
-                                <div class="ticket-info">
-                                    <div class="ticket-row">
-                                        <span>Tickets:</span>
-                                        <span><?php echo htmlspecialchars($booking['ticket_details']); ?></span>
-                                    </div>
-                                    <div class="ticket-row">
-                                        <span>Adult Tickets:</span>
-                                        <span><?php echo htmlspecialchars($booking['adult_tickets']); ?></span>
-                                    </div>
-                                    <div class="ticket-row">
-                                        <span>Children (0-5):</span>
-                                        <span><?php echo htmlspecialchars($booking['child_0_5_tickets']); ?></span>
-                                    </div>
-                                    <div class="ticket-row">
-                                        <span>Children (5-12):</span>
-                                        <span><?php echo htmlspecialchars($booking['child_5_12_tickets']); ?></span>
-                                    </div>
-                                    <div class="ticket-row">
-                                        <span>Senior Tickets:</span>
-                                        <span><?php echo htmlspecialchars($booking['senior_tickets']); ?></span>
+                                <div class="booking-details">
+                                    <div class="booking-date">
+                                        <i class="far fa-calendar-alt"></i> <?php echo date('F d, Y', strtotime($booking['visit_date'])); ?>
                                     </div>
                                     
-                                    <div class="total-amount">
-                                        <span>Total:</span>
-                                        <span>$<?php echo number_format($booking['total_amount'], 2); ?></span>
+                                    <div class="booking-number">
+                                        <i class="fas fa-hashtag"></i> TICKET #<?php echo str_pad($booking['id'], 6, '0', STR_PAD_LEFT); ?>
+                                    </div>
+                                    
+                                    <div class="ticket-info">
+                                        <div class="ticket-row">
+                                            <span>Total Tickets:</span>
+                                            <span><?php 
+                                                $total_tickets = $booking['adult_tickets'] + 
+                                                               $booking['child_0_5_tickets'] + 
+                                                               $booking['child_5_12_tickets'] + 
+                                                               $booking['senior_tickets'];
+                                                echo $total_tickets;
+                                            ?></span>
+                                        </div>
+                                        <?php if ($booking['adult_tickets'] > 0): ?>
+                                        <div class="ticket-row">
+                                            <span>Adult:</span>
+                                            <span><?php echo htmlspecialchars($booking['adult_tickets']); ?></span>
+                                        </div>
+                                        <?php endif; ?>
+                                        <?php if ($booking['child_0_5_tickets'] > 0): ?>
+                                        <div class="ticket-row">
+                                            <span>Children (0-5):</span>
+                                            <span><?php echo htmlspecialchars($booking['child_0_5_tickets']); ?></span>
+                                        </div>
+                                        <?php endif; ?>
+                                        <?php if ($booking['child_5_12_tickets'] > 0): ?>
+                                        <div class="ticket-row">
+                                            <span>Children (5-12):</span>
+                                            <span><?php echo htmlspecialchars($booking['child_5_12_tickets']); ?></span>
+                                        </div>
+                                        <?php endif; ?>
+                                        <?php if ($booking['senior_tickets'] > 0): ?>
+                                        <div class="ticket-row">
+                                            <span>Senior:</span>
+                                            <span><?php echo htmlspecialchars($booking['senior_tickets']); ?></span>
+                                        </div>
+                                        <?php endif; ?>
+                                        
+                                        <div class="total-amount">
+                                            <span>Total:</span>
+                                            <span>₹<?php echo number_format($booking['total_amount'], 2); ?></span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <?php if ($status_text == 'Completed'): ?>
-                                <div class="ticket-stamp">
-                                    <div class="ticket-stamp-inner">
-                                        Visited
-                                    </div>
-                                </div>
-                            <?php endif; ?>
                             
                             <div class="booking-actions">
                                 <a href="view-booking.php?id=<?php echo $booking['id']; ?>" class="action-btn view-btn">
-                                    <i class="fas fa-eye"></i> View Details
+                                    <i class="fas fa-eye"></i> show QR
                                 </a>
                                 
                                 <?php if ($status_text == 'Upcoming' || $status_text == 'Today'): ?>

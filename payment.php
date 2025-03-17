@@ -61,11 +61,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $booking_id = $conn->insert_id;
             $conn->commit();
 
-            // Store booking data for confirmation processing
+            // Create bills directory if it doesn't exist
+            $billsDir = str_replace('\\', '/', __DIR__ . '/bills');
+            if (!file_exists($billsDir)) {
+                if (!mkdir($billsDir, 0777, true)) {
+                    throw new Exception("Failed to create bills directory");
+                }
+                // Ensure proper permissions on Windows
+                chmod($billsDir, 0777);
+            }
+
+            // Create booking_details array with all necessary information
             $booking_details = array_merge($booking, [
                 'booking_id' => $booking_id,
                 'razorpay_payment_id' => $_POST['razorpay_payment_id']
             ]);
+
+            // Generate PDF bill
+            require_once 'vendor/autoload.php';
+            require_once 'generate_bill_pdf.php';
+            
+            try {
+                $pdf_path = generateBillPDF($booking_details);
+                
+                // Update booking record with PDF path
+                $update_pdf = "UPDATE bookings SET bill_pdf_path = ? WHERE id = ?";
+                $stmt = $conn->prepare($update_pdf);
+                $stmt->bind_param("si", $pdf_path, $booking_id);
+                $stmt->execute();
+
+                // Store booking data for confirmation processing
+                $booking_details['bill_pdf_path'] = $pdf_path;
+            } catch (Exception $e) {
+                error_log("PDF Generation Error: " . $e->getMessage());
+                // Continue with the booking process even if PDF generation fails
+                $booking_details['bill_pdf_path'] = null;
+            }
 
             try {
                 // Include and process booking confirmation
@@ -84,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Redirect to success page
                 header('Location: booking_success.php');
                 exit;
-                
             } catch (Exception $e) {
                 error_log("Error in confirmation processing: " . $e->getMessage());
                 // Still redirect to success page, but with a flag indicating notification issues

@@ -142,7 +142,8 @@ $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
         (adult_tickets + child_0_5_tickets + child_5_12_tickets + senior_tickets) <= 100
     ),
     INDEX idx_visit_date (visit_date),
-    INDEX idx_email (email)
+    INDEX idx_email (email),
+    bill_pdf_path VARCHAR(255)
 )";
 
 if (mysqli_query($conn, $sql_bookings)) {
@@ -158,6 +159,16 @@ if (mysqli_query($conn, $sql_bookings)) {
         }
     } else {
         echo "razorpay_payment_id column already exists.<br>";
+    }
+
+    // Check and add bill_pdf_path column
+    if (!columnExists($conn, 'bookings', 'bill_pdf_path')) {
+        $alter_table_query = "ALTER TABLE bookings ADD COLUMN bill_pdf_path VARCHAR(255)";
+        if (mysqli_query($conn, $alter_table_query)) {
+            echo "Added bill_pdf_path column successfully.<br>";
+        } else {
+            echo "Error adding bill_pdf_path column: " . mysqli_error($conn) . "<br>";
+        }
     }
 } else {
     echo "Error creating bookings table: " . mysqli_error($conn) . "<br>";
