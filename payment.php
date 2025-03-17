@@ -14,58 +14,101 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        // Verify Razorpay payment ID exists
+        if (!isset($_POST['razorpay_payment_id'])) {
+            throw new Exception("Payment verification failed");
+        }
+
         // Begin transaction
         $conn->begin_transaction();
+
+        // Update ticket_rates table to increment booked_ticket count
+        $totalTickets = $booking['adult_tickets'] + $booking['child_0_5_tickets'] + 
+                       $booking['child_5_12_tickets'] + $booking['senior_tickets'];
+        
+        $updateRates = "UPDATE ticket_rates SET booked_ticket = booked_ticket + ? WHERE id = 1";
+        $stmt = $conn->prepare($updateRates);
+        $stmt->bind_param("i", $totalTickets);
+        $stmt->execute();
 
         // Insert into bookings table
         $sql = "INSERT INTO bookings (
             visit_date, adult_tickets, child_0_5_tickets, child_5_12_tickets, 
             senior_tickets, camera_video, document_path, total_amount, payment_status,
-            name, email, phone, city, address
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?, ?)";
+            name, email, phone, city, address, razorpay_payment_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?, ?, ?)";
         
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "siiiiisdsssss",
+            "siiiisdsssssss",
             $booking['visit_date'],
             $booking['adult_tickets'],
             $booking['child_0_5_tickets'],
             $booking['child_5_12_tickets'],
             $booking['senior_tickets'],
             $booking['camera_video'],
-            $booking['document'],
-            $totalAmount,
-            $_POST['name'],
-            $_POST['email'],
-            $_POST['phone'],
-            $_POST['city'],
-            $_POST['address']
+            $booking['document_path'],
+            $booking['total_amount'],
+            $booking['name'],
+            $booking['email'],
+            $booking['phone'],
+            $booking['city'],
+            $booking['address'],
+            $_POST['razorpay_payment_id']
         );
 
         if ($stmt->execute()) {
-            // Get booking ID
             $booking_id = $conn->insert_id;
-            
-            // Commit transaction
             $conn->commit();
-            
-            // Clear booking session
-            unset($_SESSION['booking']);
-            
-            // Set success message with booking details
-            $_SESSION['success_message'] = "Thank you for your booking! Your booking ID is #" . $booking_id . 
-                                         ". A confirmation email has been sent to " . $_POST['email'];
-            
-            // Redirect to confirmation page
-            header('Location: booking-confirmation.php');
-            exit;
+
+            // Store booking data for confirmation processing
+            $booking_details = array_merge($booking, [
+                'booking_id' => $booking_id,
+                'razorpay_payment_id' => $_POST['razorpay_payment_id']
+            ]);
+
+            try {
+                // Include and process booking confirmation
+                require_once 'booking_confirmation.php';
+                $notification_status = processBookingConfirmation($booking_details);
+                
+                // Store notification status in session
+                $_SESSION['notification_status'] = $notification_status;
+                
+                // Store booking data in session for booking_success.php
+                $_SESSION['booking_data'] = $booking_details;
+                
+                // Clear the original booking session variable
+                unset($_SESSION['booking']);
+                
+                // Redirect to success page
+                header('Location: booking_success.php');
+                exit;
+                
+            } catch (Exception $e) {
+                error_log("Error in confirmation processing: " . $e->getMessage());
+                // Still redirect to success page, but with a flag indicating notification issues
+                $_SESSION['booking_data'] = $booking_details;
+                $_SESSION['notification_status'] = ['email' => false, 'sms' => false];
+                header('Location: booking_success.php');
+                exit;
+            }
         }
     } catch (Exception $e) {
-        // Rollback transaction on error
         $conn->rollback();
-        $error_message = "Error processing booking. Please try again.";
+        $error = "Error processing booking: " . $e->getMessage();
     }
 }
+
+// Add this success message display in the HTML section
+if (isset($_SESSION['success_message'])): ?>
+    <div class="success-message">
+        <i class="fas fa-check-circle"></i>
+        <?php echo $_SESSION['success_message']; ?>
+    </div>
+<?php 
+    unset($_SESSION['success_message']);
+endif;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Payment - SafariGate Zoo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         .payment-container {
             max-width: 800px;
@@ -274,33 +318,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="post" id="payment-form">
             <div class="payment-section">
-                <h3><i class="fas fa-money-bill-wave"></i> Select Payment Method</h3>
-                <div class="payment-methods">
-                    <div class="payment-method" onclick="selectPayment('credit-card')">
-                        <input type="radio" name="payment-method" value="credit-card" id="credit-card" hidden>
-                        <i class="fas fa-credit-card"></i>
-                        <p>Credit Card</p>
-                    </div>
-                    <div class="payment-method" onclick="selectPayment('debit-card')">
-                        <input type="radio" name="payment-method" value="debit-card" id="debit-card" hidden>
-                        <i class="fas fa-credit-card"></i>
-                        <p>Debit Card</p>
-                    </div>
-                    <div class="payment-method" onclick="selectPayment('upi')">
-                        <input type="radio" name="payment-method" value="upi" id="upi" hidden>
-                        <i class="fas fa-mobile-alt"></i>
-                        <p>UPI</p>
-                    </div>
+                <h3><i class="fas fa-money-bill-wave"></i> Payment Method</h3>
+                <div class="total-amount">
+                    Total Payable: ₹<?php echo number_format($booking['total_amount'], 2); ?>
                 </div>
+                <button type="button" class="pay-btn" onclick="openRazorpay()">
+                    <i class="fas fa-lock"></i> Pay Securely
+                </button>
             </div>
-
-            <div class="total-amount">
-                Total Payable: ₹<?php echo number_format($booking['total_amount'], 2); ?>
-            </div>
-
-            <button type="submit" class="pay-btn">
-                <i class="fas fa-lock"></i> Pay Securely
-            </button>
         </form>
     </div>
 
@@ -316,6 +341,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Check the radio button
             document.getElementById(method).checked = true;
+        }
+
+        function openRazorpay() {
+            const options = {
+                key: 'rzp_test_1TSGXPk46TbXBv',
+                amount: <?php echo $booking['total_amount'] * 100 ?>, // Amount in paise
+                currency: 'INR',
+                name: 'SafariGate Zoo',
+                description: 'Zoo Ticket Booking',
+                image: 'path/to/your/logo.png',
+                prefill: {
+                    name: '<?php echo htmlspecialchars($booking['name']) ?>',
+                    email: '<?php echo htmlspecialchars($booking['email']) ?>',
+                    contact: '<?php echo htmlspecialchars($booking['phone']) ?>'
+                },
+                theme: {
+                    color: '#ff6e01'
+                },
+                handler: function(response) {
+                    // Create hidden form for submission
+                    const form = document.getElementById('payment-form');
+                    
+                    // Add payment ID to form
+                    const paymentInput = document.createElement('input');
+                    paymentInput.type = 'hidden';
+                    paymentInput.name = 'razorpay_payment_id';
+                    paymentInput.value = response.razorpay_payment_id;
+                    form.appendChild(paymentInput);
+                    
+                    // Add total amount to form
+                    const amountInput = document.createElement('input');
+                    amountInput.type = 'hidden';
+                    amountInput.name = 'total_amount';
+                    amountInput.value = '<?php echo $booking['total_amount'] ?>';
+                    form.appendChild(amountInput);
+                    
+                    // Submit the form
+                    form.submit();
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
         }
     </script>
 

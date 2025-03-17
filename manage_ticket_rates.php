@@ -13,6 +13,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $conn->begin_transaction();
 
+        // Validate inputs
+        $adult_rate = filter_var($_POST['adult_rate'], FILTER_VALIDATE_FLOAT);
+        $child_rate = filter_var($_POST['child_5_12_rate'], FILTER_VALIDATE_FLOAT);
+        $senior_rate = filter_var($_POST['senior_rate'], FILTER_VALIDATE_FLOAT);
+        $camera_rate = filter_var($_POST['camera_rate'], FILTER_VALIDATE_FLOAT);
+        $max_tickets = filter_var($_POST['max_tickets_per_day'], FILTER_VALIDATE_INT);
+
+        if ($adult_rate === false || $child_rate === false || $senior_rate === false || 
+            $camera_rate === false || $max_tickets === false) {
+            throw new Exception("Invalid input values");
+        }
+
+        // Update rates
         $stmt = $conn->prepare("UPDATE ticket_rates SET 
             adult_rate = ?,
             child_5_12_rate = ?,
@@ -22,14 +35,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE id = 1");
         
         $stmt->bind_param("ddddi", 
-            $_POST['adult_rate'],
-            $_POST['child_5_12_rate'],
-            $_POST['senior_rate'],
-            $_POST['camera_rate'],
-            $_POST['max_tickets_per_day']
+            $adult_rate,
+            $child_rate,
+            $senior_rate,
+            $camera_rate,
+            $max_tickets
         );
 
         if ($stmt->execute()) {
+            // Update max_tickets in daily_tickets table for future dates
+            $updateDaily = $conn->prepare("UPDATE daily_tickets 
+                                         SET max_tickets = ? 
+                                         WHERE date >= CURDATE()");
+            $updateDaily->bind_param("i", $max_tickets);
+            $updateDaily->execute();
+            
             $conn->commit();
             $_SESSION['message'] = "Ticket rates updated successfully!";
         } else {

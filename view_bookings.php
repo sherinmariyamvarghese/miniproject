@@ -8,24 +8,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSI
     exit();
 }
 
-// Handle booking status updates
-if (isset($_POST['update_status'])) {
-    $booking_id = $_POST['booking_id'];
-    $new_status = $_POST['new_status'];
-    
-    $stmt = $conn->prepare("UPDATE bookings SET payment_status = ? WHERE id = ?");
-    $stmt->bind_param("si", $new_status, $booking_id);
-    
-    if ($stmt->execute()) {
-        $_SESSION['message'] = "Booking status updated successfully!";
-    } else {
-        $_SESSION['error'] = "Error updating booking status";
-    }
-    
-    header('Location: view_bookings.php');
-    exit();
-}
-
 // Get all bookings with pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $per_page = 10;
@@ -36,11 +18,44 @@ $total_result = $conn->query($total_query);
 $total_bookings = $total_result->fetch_assoc()['count'];
 $total_pages = ceil($total_bookings / $per_page);
 
-$query = "SELECT * FROM bookings ORDER BY booking_date DESC LIMIT ? OFFSET ?";
+// Modify the query to include more details
+$query = "SELECT b.*, 
+          dt.max_tickets, 
+          dt.booked_tickets,
+          (dt.max_tickets - dt.booked_tickets) as available_tickets,
+          CONCAT(
+              CASE WHEN b.adult_tickets > 0 
+                   THEN CONCAT(b.adult_tickets, ' Adult', IF(b.adult_tickets > 1, 's', ''), ' ') 
+                   ELSE '' END,
+              CASE WHEN b.child_0_5_tickets > 0 
+                   THEN CONCAT(b.child_0_5_tickets, ' Child(0-5)', IF(b.child_0_5_tickets > 1, 's', ''), ' ') 
+                   ELSE '' END,
+              CASE WHEN b.child_5_12_tickets > 0 
+                   THEN CONCAT(b.child_5_12_tickets, ' Child(5-12)', IF(b.child_5_12_tickets > 1, 's', ''), ' ') 
+                   ELSE '' END,
+              CASE WHEN b.senior_tickets > 0 
+                   THEN CONCAT(b.senior_tickets, ' Senior', IF(b.senior_tickets > 1, 's', '')) 
+                   ELSE '' END
+          ) as ticket_details
+          FROM bookings b
+          LEFT JOIN daily_tickets dt ON DATE(b.visit_date) = dt.date
+          ORDER BY b.booking_date DESC 
+          LIMIT ? OFFSET ?";
+
 $stmt = $conn->prepare($query);
 $stmt->bind_param("ii", $per_page, $offset);
 $stmt->execute();
 $bookings = $stmt->get_result();
+
+// Add after the query execution
+if ($bookings->num_rows === 0) {
+    echo '<div class="alert alert-info">No bookings found.</div>';
+}
+
+// Add debug information (remove in production)
+$debug = $conn->query("SELECT COUNT(*) as count FROM bookings");
+$count = $debug->fetch_assoc()['count'];
+echo "<div class='alert alert-info'>Total bookings in database: $count</div>";
 ?>
 
 <!DOCTYPE html>
@@ -150,6 +165,15 @@ $bookings = $stmt->get_result();
             padding: 20px;
             padding-top: 80px;  /* Add space for fixed dashboard link */
         }
+
+        .warning-text {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .bookings-table td {
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -183,11 +207,12 @@ $bookings = $stmt->get_result();
                         <th>ID</th>
                         <th>Name</th>
                         <th>Visit Date</th>
-                        <th>Total Tickets</th>
+                        <th>booked Tickets</th>
+                        <th>Available Tickets</th>
+                        <th>Max Tickets</th>
                         <th>Amount</th>
                         <th>Status</th>
                         <th>Booking Date</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -198,12 +223,22 @@ $bookings = $stmt->get_result();
                             <td><?php echo date('Y-m-d', strtotime($booking['visit_date'])); ?></td>
                             <td>
                                 <?php 
-                                echo $booking['adult_tickets'] + 
-                                     $booking['child_0_5_tickets'] + 
-                                     $booking['child_5_12_tickets'] + 
-                                     $booking['senior_tickets']; 
+                                $totalTickets = $booking['adult_tickets'] + 
+                                              $booking['child_0_5_tickets'] + 
+                                              $booking['child_5_12_tickets'] + 
+                                              $booking['senior_tickets'];
+                                echo $totalTickets;
+                                ?>
+                            </td> tickets
+                            <td>
+                                <?php 
+                                echo isset($booking['available_tickets']) ? $booking['available_tickets'] : 'N/A';
+                                if (isset($booking['available_tickets']) && $booking['available_tickets'] < 20) {
+                                    echo ' <span class="warning-text">(Limited)</span>';
+                                }
                                 ?>
                             </td>
+                            <td><?php echo isset($booking['max_tickets']) ? $booking['max_tickets'] : 'N/A'; ?></td>
                             <td>₹<?php echo number_format($booking['total_amount'], 2); ?></td>
                             <td>
                                 <span class="status-badge status-<?php echo strtolower($booking['payment_status']); ?>">
@@ -211,17 +246,6 @@ $bookings = $stmt->get_result();
                                 </span>
                             </td>
                             <td><?php echo date('Y-m-d H:i', strtotime($booking['booking_date'])); ?></td>
-                            <td>
-                                <form method="POST" style="display: inline;">
-                                    <input type="hidden" name="booking_id" value="<?php echo $booking['id']; ?>">
-                                    <select name="new_status" onchange="this.form.submit()">
-                                        <option value="pending" <?php echo $booking['payment_status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                        <option value="completed" <?php echo $booking['payment_status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
-                                        <option value="failed" <?php echo $booking['payment_status'] == 'failed' ? 'selected' : ''; ?>>Failed</option>
-                                    </select>
-                                    <input type="hidden" name="update_status" value="1">
-                                </form>
-                            </td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>

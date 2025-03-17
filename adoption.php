@@ -473,6 +473,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     // Global object to track adoptions
     let adoptions = {};
@@ -808,19 +809,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Update the completeAdoptionBtn click handler in your script section
+    // Update the completeAdoptionBtn click handler
     document.getElementById('completeAdoptionBtn').addEventListener('click', function() {
         if (Object.keys(adoptions).length === 0) {
             alert('Please add at least one animal to your adoption list.');
             return;
         }
-        
-        // Store adoptions in session storage for the payment page
-        sessionStorage.setItem('adoptions', JSON.stringify(adoptions));
-        
-        // Redirect to adoption payment page
-        // window.location.href = 'adoption-payment.php';
+
+        // Calculate total amount in paise (Razorpay requires amount in smallest currency unit)
+        let totalAmount = 0;
+        for (const adoption of Object.values(adoptions)) {
+            totalAmount += adoption.rate * adoption.quantity;
+        }
+        const amountInPaise = Math.round(totalAmount * 100);
+
+        // Create Razorpay options
+        const options = {
+            key: 'rzp_test_1TSGXPk46TbXBv',
+            amount: amountInPaise,
+            currency: 'INR',
+            name: 'SafariGate',
+            description: 'Animal Adoption Payment',
+            image: 'path/to/your/logo.png', // Add your logo URL here
+            handler: function(response) {
+                // Handle successful payment
+                handlePaymentSuccess(response);
+            },
+            prefill: {
+                name: '<?php echo isset($_SESSION["user_name"]) ? $_SESSION["user_name"] : ""; ?>',
+                email: '<?php echo isset($_SESSION["user_email"]) ? $_SESSION["user_email"] : ""; ?>',
+            },
+            theme: {
+                color: '#ff6e01'
+            }
+        };
+
+        // Initialize Razorpay
+        const rzp = new Razorpay(options);
+        rzp.open();
     });
+
+    // Function to handle successful payment
+    function handlePaymentSuccess(response) {
+        // Send payment details to server
+        fetch('process_adoption_payment.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                adoptions: adoptions
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Clear adoptions from localStorage
+                localStorage.removeItem('adoptions');
+                // Redirect to success page
+                window.location.href = 'adoption-success.php';
+            } else {
+                alert('Error processing payment: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error processing payment. Please try again.');
+        });
+    }
 
     // Add this function to load user's adoptions when page loads
     function loadUserAdoptions() {

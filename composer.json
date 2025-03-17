@@ -1,0 +1,10 @@
+{
+    "require": {
+        "tecnickcom/tcpdf": "^6.8",
+        "phpmailer/phpmailer": "^6.9",
+        "twilio/sdk": "^8.4",
+        "endroid/qr-code": "^6.0",
+        "bacon/bacon-qr-code": "^3.0",
+        "chillerlan/php-qrcode": "^5.0"
+    }
+}

@@ -3,8 +3,9 @@ require_once 'connect.php';
 
 // Function to check if a column exists in a table
 function columnExists($conn, $table, $column) {
-    $result = $conn->query("SHOW COLUMNS FROM $table LIKE '$column'");
-    return $result->num_rows > 0;
+    $query = "SHOW COLUMNS FROM $table LIKE '$column'";
+    $result = mysqli_query($conn, $query);
+    return mysqli_num_rows($result) > 0;
 }
 
 // Create users table
@@ -146,6 +147,18 @@ $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
 
 if (mysqli_query($conn, $sql_bookings)) {
     echo "Table `bookings` created successfully.<br>";
+    
+    // Check and add razorpay_payment_id column
+    if (!columnExists($conn, 'bookings', 'razorpay_payment_id')) {
+        $alter_table_query = "ALTER TABLE bookings ADD COLUMN razorpay_payment_id VARCHAR(255)";
+        if (mysqli_query($conn, $alter_table_query)) {
+            echo "Added razorpay_payment_id column successfully.<br>";
+        } else {
+            echo "Error adding razorpay_payment_id column: " . mysqli_error($conn) . "<br>";
+        }
+    } else {
+        echo "razorpay_payment_id column already exists.<br>";
+    }
 } else {
     echo "Error creating bookings table: " . mysqli_error($conn) . "<br>";
 }
@@ -166,6 +179,8 @@ $sql_adoptions = "CREATE TABLE IF NOT EXISTS adoptions (
     amount DECIMAL(10,2) NOT NULL,
     adoption_date DATE NOT NULL,
     status ENUM('pending', 'active', 'completed', 'cancelled') DEFAULT 'pending',
+    payment_id VARCHAR(255),
+    payment_date TIMESTAMP NULL,
     name VARCHAR(100),
     email VARCHAR(100),
     phone VARCHAR(20),
@@ -185,38 +200,6 @@ if (mysqli_query($conn, $sql_adoptions)) {
     echo "Error creating adoptions table: " . mysqli_error($conn) . "<br>";
 }
 
-// Create contact_messages table
-$sql_contact = "CREATE TABLE IF NOT EXISTS contact_messages (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    subject VARCHAR(200) NOT NULL,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_email (email)
-)";
-
-if (mysqli_query($conn, $sql_contact)) {
-    echo "Table `contact_messages` created successfully.<br>";
-} else {
-    echo "Error creating contact_messages table: " . mysqli_error($conn) . "<br>";
-}
-
-// Create newsletter_subscribers table
-$sql_newsletter = "CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_email (email)
-)";
-
-if (mysqli_query($conn, $sql_newsletter)) {
-    echo "Table `newsletter_subscribers` created successfully.<br>";
-} else {
-    echo "Error creating newsletter_subscribers table: " . mysqli_error($conn) . "<br>";
-}
-
 // Create ticket_rates table
 $sql_ticket_rates = "CREATE TABLE IF NOT EXISTS ticket_rates (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -224,9 +207,8 @@ $sql_ticket_rates = "CREATE TABLE IF NOT EXISTS ticket_rates (
     child_5_12_rate DECIMAL(10,2) NOT NULL,
     senior_rate DECIMAL(10,2) NOT NULL,
     camera_rate DECIMAL(10,2) NOT NULL,
-
     max_tickets_per_day INT NOT NULL DEFAULT 100,
-     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )";
 
 if (mysqli_query($conn, $sql_ticket_rates)) {
@@ -246,13 +228,35 @@ if (mysqli_query($conn, $sql_ticket_rates)) {
 } else {
     echo "Error creating ticket_rates table: " . mysqli_error($conn) . "<br>";
 }
-$alter_table_query = "ALTER TABLE ticket_rates ADD COLUMN booked_ticket INT NOT NULL DEFAULT 0";
-if (mysqli_query($conn, $alter_table_query)) {
-    echo "added.<br>";
+
+// Check if booked_ticket column exists before adding it
+if (!columnExists($conn, 'ticket_rates', 'booked_ticket')) {
+    $alter_table_query = "ALTER TABLE ticket_rates ADD COLUMN booked_ticket INT NOT NULL DEFAULT 0";
+    if (mysqli_query($conn, $alter_table_query)) {
+        echo "Added booked_ticket column successfully.<br>";
+    } else {
+        echo "Error adding booked_ticket column: " . mysqli_error($conn) . "<br>";
+    }
 } else {
-    echo "Error booked_ticket`: " . mysqli_error($conn);
+    echo "booked_ticket column already exists.<br>";
 }
 
+// Create daily_tickets table
+$sql_daily_tickets = "CREATE TABLE IF NOT EXISTS daily_tickets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE NOT NULL UNIQUE,
+    max_tickets INT NOT NULL DEFAULT 100,
+    booked_tickets INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_date (date)
+)";
+
+if (mysqli_query($conn, $sql_daily_tickets)) {
+    echo "Table `daily_tickets` created successfully.<br>";
+} else {
+    echo "Error creating daily_tickets table: " . mysqli_error($conn) . "<br>";
+}
 
 echo "<br>All tables have been created successfully. You can now:";
 echo "<br>1. <a href='register.php'>Register users</a>";
