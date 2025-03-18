@@ -491,6 +491,12 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </li>
+
+            <li>
+                <a href="scan_ticket.php" class="<?= basename($_SERVER['PHP_SELF']) == 'scan_ticket.php' ? 'active' : '' ?>">
+                    <i class="fas fa-qrcode"></i> Scan Tickets
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -542,6 +548,12 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
                     ₹<?php echo number_format($stats['bookings']['total_amount'], 2); ?>
                 </div>
             </div>
+
+            <a href="scan_ticket.php" class="dashboard-card">
+                <i class="fas fa-qrcode"></i>
+                <h3>Scan Tickets</h3>
+                <p>Validate visitor tickets</p>
+            </a>
         </div>
 
         <table class="users-table">

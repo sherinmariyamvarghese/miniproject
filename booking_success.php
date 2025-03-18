@@ -65,6 +65,7 @@ if (!isset($_SESSION['success_message'])) {
     <title>Booking Successful - SafariGate Zoo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         .success-container {
             max-width: 800px;
@@ -283,6 +284,62 @@ if (!isset($_SESSION['success_message'])) {
 
         // Run confetti when page loads
         window.addEventListener('load', createConfetti);
+
+        // Modified QR code generation function
+        function generateQRCode(bookingId) {
+            // Clear any existing QR code
+            document.getElementById("qrcode").innerHTML = '';
+            
+            fetch(`uploads/qrcodes/qr_data_${bookingId}.json`)
+                .then(response => response.text())
+                .then(data => {
+                    console.log('QR Data:', data); // Debug log
+                    
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: data,
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    // After QR code is generated, save it
+                    setTimeout(() => {
+                        const canvas = document.querySelector("#qrcode canvas");
+                        if (canvas) {
+                            const imgData = canvas.toDataURL("image/png");
+                            
+                            fetch('save_qr.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    booking_id: bookingId,
+                                    image_data: imgData
+                                })
+                            }).then(response => response.json())
+                              .then(data => console.log('Save response:', data))
+                              .catch(error => console.error('Error saving QR:', error));
+                        }
+                    }, 100);
+                })
+                .catch(error => {
+                    console.error('Error generating QR:', error);
+                    document.getElementById("qrcode").innerHTML = 'Error generating QR code';
+                });
+        }
+
+        // Generate QR code when page loads
+        window.addEventListener('load', () => {
+            const bookingId = <?php echo json_encode($_SESSION['booking_data']['booking_id']); ?>;
+            console.log('Generating QR for booking:', bookingId); // Debug log
+            generateQRCode(bookingId);
+        });
     </script>
+
+    <!-- Modify the QR code container to be visible -->
+    <div id="qrcode" style="margin: 20px auto; width: 256px;"></div>
 </body>
 </html> 

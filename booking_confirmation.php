@@ -40,33 +40,43 @@ function generateBookingQR($booking) {
     }
 
     try {
-        // QR code data
+        // Generate a secure hash
+        $secret_key = 'your_secret_key_here'; // Store this securely
+        $hash = hash_hmac('sha256', $booking['booking_id'], $secret_key);
+        
+        // QR code data with enhanced security
         $qrData = json_encode([
             'booking_id' => $booking['booking_id'],
+            'hash' => $hash,
             'visit_date' => $booking['visit_date'],
             'total_tickets' => $booking['adult_tickets'] + $booking['child_0_5_tickets'] + 
-                             $booking['child_5_12_tickets'] + $booking['senior_tickets']
+                             $booking['child_5_12_tickets'] + $booking['senior_tickets'],
+            'timestamp' => time()
         ]);
 
-        // Generate QR code using Endroid library
-        $result = Builder::create()
-            ->data($qrData)
-            ->encoding(new Encoding('UTF-8'))
-            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->size(300)
-            ->margin(10)
-            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-            ->writer(new PngWriter())
-            ->build();
-
-        // Save QR code
+        // Save the QR data to a file
         $qr_file = $dir . '/booking_' . $booking['booking_id'] . '.png';
-        $result->saveToFile($qr_file);
+        $json_file = $dir . '/qr_data_' . $booking['booking_id'] . '.json';
+        
+        // Ensure the data is written properly
+        if (file_put_contents($json_file, $qrData) === false) {
+            error_log("Failed to write QR data to file: " . $json_file);
+            return false;
+        }
+
+        // Set proper permissions
+        chmod($json_file, 0644);
+
+        // Update booking with QR code path
+        $conn = require 'connect.php';
+        $stmt = $conn->prepare("UPDATE bookings SET qr_code_path = ? WHERE id = ?");
+        $stmt->bind_param("si", $qr_file, $booking['booking_id']);
+        $stmt->execute();
 
         return $qr_file;
     } catch (Exception $e) {
         error_log("Error generating QR code: " . $e->getMessage());
-        return 'images/default-qr.png';
+        return false;
     }
 }
 

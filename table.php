@@ -132,6 +132,7 @@ $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     document_path VARCHAR(255),
     total_amount DECIMAL(10,2) NOT NULL,
     payment_status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
+    status ENUM('pending', 'used', 'cancelled', 'expired') DEFAULT 'pending',
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
@@ -143,7 +144,12 @@ $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     ),
     INDEX idx_visit_date (visit_date),
     INDEX idx_email (email),
-    bill_pdf_path VARCHAR(255)
+    bill_pdf_path VARCHAR(255),
+    qr_code_path VARCHAR(255),
+    used_at TIMESTAMP NULL,
+    used_by INT NULL,
+    FOREIGN KEY (used_by) REFERENCES users(id),
+    cancelled_at TIMESTAMP NULL DEFAULT NULL
 )";
 
 if (mysqli_query($conn, $sql_bookings)) {
@@ -169,6 +175,41 @@ if (mysqli_query($conn, $sql_bookings)) {
         } else {
             echo "Error adding bill_pdf_path column: " . mysqli_error($conn) . "<br>";
         }
+    }
+
+    // Modify the used_by column in bookings table
+    $alter_bookings = "ALTER TABLE bookings 
+        MODIFY COLUMN used_by INT,
+        ADD FOREIGN KEY (used_by) REFERENCES users(id)";
+
+    if (mysqli_query($conn, $alter_bookings)) {
+        echo "Bookings table modified successfully<br>";
+    } else {
+        echo "Error modifying bookings table: " . mysqli_error($conn) . "<br>";
+    }
+
+    // Update existing bookings to have 'pending' status if null
+    $update_status = "UPDATE bookings SET status = 'pending' WHERE status IS NULL";
+    if (mysqli_query($conn, $update_status)) {
+        echo "Updated existing bookings with default status<br>";
+    } else {
+        echo "Error updating existing bookings: " . mysqli_error($conn) . "<br>";
+    }
+
+    // Fix any inconsistent ticket statuses
+    $sql_fix_tickets = "
+        UPDATE bookings 
+        SET status = 'pending',
+            used_at = NULL,
+            used_by = NULL
+        WHERE status = 'used' 
+        AND used_at IS NULL 
+        AND used_by IS NULL";
+
+    if (mysqli_query($conn, $sql_fix_tickets)) {
+        echo "Fixed inconsistent ticket statuses.<br>";
+    } else {
+        echo "Error fixing ticket statuses: " . mysqli_error($conn) . "<br>";
     }
 } else {
     echo "Error creating bookings table: " . mysqli_error($conn) . "<br>";
