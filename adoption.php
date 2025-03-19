@@ -157,9 +157,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </tfoot>
             </table>
             
-            <button type="submit" class="adopt-button" id="completeAdoptionBtn" disabled>
-                <i class="fas fa-check-circle"></i> Complete Adoption
-            </button>
+            <?php if(isset($_SESSION['user_id'])): ?>
+                <button type="submit" class="adopt-button" id="completeAdoptionBtn">
+                    <i class="fas fa-check-circle"></i> Complete Adoption
+                </button>
+            <?php else: ?>
+                <button type="button" class="adopt-button" onclick="window.location.href='login.php'">
+                    <i class="fas fa-sign-in-alt"></i> Login to Adopt
+                </button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -473,7 +479,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     // Global object to track adoptions
     let adoptions = {};
@@ -809,75 +814,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Update the completeAdoptionBtn click handler
-    document.getElementById('completeAdoptionBtn').addEventListener('click', function() {
-        if (Object.keys(adoptions).length === 0) {
+    // Update the completeAdoptionBtn click handler in your script section
+    document.getElementById('completeAdoptionBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Get adoptions from localStorage
+        const adoptionsData = JSON.parse(localStorage.getItem('adoptions'));
+        if (!adoptionsData || Object.keys(adoptionsData).length === 0) {
             alert('Please add at least one animal to your adoption list.');
             return;
         }
-
-        // Calculate total amount in paise (Razorpay requires amount in smallest currency unit)
-        let totalAmount = 0;
-        for (const adoption of Object.values(adoptions)) {
-            totalAmount += adoption.rate * adoption.quantity;
-        }
-        const amountInPaise = Math.round(totalAmount * 100);
-
-        // Create Razorpay options
-        const options = {
-            key: 'rzp_test_1TSGXPk46TbXBv',
-            amount: amountInPaise,
-            currency: 'INR',
-            name: 'SafariGate',
-            description: 'Animal Adoption Payment',
-            image: 'path/to/your/logo.png', // Add your logo URL here
-            handler: function(response) {
-                // Handle successful payment
-                handlePaymentSuccess(response);
-            },
-            prefill: {
-                name: '<?php echo isset($_SESSION["user_name"]) ? $_SESSION["user_name"] : ""; ?>',
-                email: '<?php echo isset($_SESSION["user_email"]) ? $_SESSION["user_email"] : ""; ?>',
-            },
-            theme: {
-                color: '#ff6e01'
-            }
-        };
-
-        // Initialize Razorpay
-        const rzp = new Razorpay(options);
-        rzp.open();
+        
+        // Create form for submission
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'adoption-confirmation.php';
+        
+        // Add adoptions data
+        const adoptionsInput = document.createElement('input');
+        adoptionsInput.type = 'hidden';
+        adoptionsInput.name = 'adoptions';
+        adoptionsInput.value = JSON.stringify(adoptionsData);
+        form.appendChild(adoptionsInput);
+        
+        // Submit form
+        document.body.appendChild(form);
+        form.submit();
     });
-
-    // Function to handle successful payment
-    function handlePaymentSuccess(response) {
-        // Send payment details to server
-        fetch('process_adoption_payment.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                adoptions: adoptions
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Clear adoptions from localStorage
-                localStorage.removeItem('adoptions');
-                // Redirect to success page
-                window.location.href = 'adoption-success.php';
-            } else {
-                alert('Error processing payment: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error processing payment. Please try again.');
-        });
-    }
 
     // Add this function to load user's adoptions when page loads
     function loadUserAdoptions() {
@@ -905,6 +868,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     document.addEventListener('DOMContentLoaded', function() {
         loadUserAdoptions();
     });
+</script>
+
+<!-- Add Razorpay script before closing body tag -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+const razorpayKeyId = 'rzp_test_1TSGXPk46TbXBv';
+
+document.getElementById('completeAdoptionBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Get total amount from summary table
+    const totalAmount = parseFloat(document.getElementById('totalAmount').textContent.replace('₹', '')) * 100; // Convert to paise
+    
+    // Get user details from session
+    const options = {
+        key: razorpayKeyId,
+        amount: totalAmount,
+        currency: 'INR',
+        name: 'SafariGate Zoo',
+        description: 'Animal Adoption Program',
+        image: 'path/to/your/logo.png',
+        handler: function(response) {
+            console.log('Payment successful:', response);
+            
+            // Create form data for all adoptions
+            const adoptionsData = JSON.parse(localStorage.getItem('adoptions'));
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'process_adoption.php';
+            
+            // Add payment ID
+            const paymentInput = document.createElement('input');
+            paymentInput.type = 'hidden';
+            paymentInput.name = 'razorpay_payment_id';
+            paymentInput.value = response.razorpay_payment_id;
+            form.appendChild(paymentInput);
+            
+            // Add total amount
+            const amountInput = document.createElement('input');
+            amountInput.type = 'hidden';
+            amountInput.name = 'total_amount';
+            amountInput.value = totalAmount / 100; // Convert back to rupees
+            form.appendChild(amountInput);
+            
+            // Add adoptions data
+            const adoptionsInput = document.createElement('input');
+            adoptionsInput.type = 'hidden';
+            adoptionsInput.name = 'adoptions';
+            adoptionsInput.value = JSON.stringify(adoptionsData);
+            form.appendChild(adoptionsInput);
+            
+            // Submit form
+            document.body.appendChild(form);
+            form.submit();
+        },
+        modal: {
+            ondismiss: function() {
+                console.log('Payment modal closed');
+            }
+        },
+        theme: {
+            color: '#ff6e01'
+        }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+});
 </script>
 
 <!-- Add this CSS to your style.css file -->

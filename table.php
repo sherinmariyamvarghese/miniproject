@@ -243,11 +243,28 @@ $sql_adoptions = "CREATE TABLE IF NOT EXISTS adoptions (
     FOREIGN KEY (animal_id) REFERENCES animals(id),
     INDEX idx_user (user_id),
     INDEX idx_animal (animal_id),
-    INDEX idx_adoption_date (adoption_date)
+    INDEX idx_adoption_date (adoption_date),
+    bill_pdf_path VARCHAR(255)
 )";
 
 if (mysqli_query($conn, $sql_adoptions)) {
     echo "Table `adoptions` created successfully with new structure.<br>";
+
+    // First, check if the bill_pdf_path column exists
+    $check_column = "SHOW COLUMNS FROM adoptions LIKE 'bill_pdf_path'";
+    $result = mysqli_query($conn, $check_column);
+
+    if (mysqli_num_rows($result) == 0) {
+        // Add the bill_pdf_path column if it doesn't exist
+        $alter_table = "ALTER TABLE adoptions 
+                        ADD COLUMN bill_pdf_path VARCHAR(255) AFTER payment_date";
+        
+        if (mysqli_query($conn, $alter_table)) {
+            echo "Added bill_pdf_path column to adoptions table successfully.<br>";
+        } else {
+            echo "Error adding bill_pdf_path column: " . mysqli_error($conn) . "<br>";
+        }
+    }
 } else {
     echo "Error creating adoptions table: " . mysqli_error($conn) . "<br>";
 }
