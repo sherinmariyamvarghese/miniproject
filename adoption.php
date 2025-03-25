@@ -873,69 +873,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Add Razorpay script before closing body tag -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-const razorpayKeyId = 'rzp_test_1TSGXPk46TbXBv';
+// const razorpayKeyId = 'rzp_test_1TSGXPk46TbXBv';
 
-document.getElementById('completeAdoptionBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    // Get total amount from summary table
-    const totalAmount = parseFloat(document.getElementById('totalAmount').textContent.replace('₹', '')) * 100; // Convert to paise
-    
-    // Get user details from session
-    const options = {
-        key: razorpayKeyId,
-        amount: totalAmount,
-        currency: 'INR',
-        name: 'SafariGate Zoo',
-        description: 'Animal Adoption Program',
-        image: 'path/to/your/logo.png',
-        handler: function(response) {
-            console.log('Payment successful:', response);
-            
-            // Create form data for all adoptions
-            const adoptionsData = JSON.parse(localStorage.getItem('adoptions'));
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = 'process_adoption.php';
-            
-            // Add payment ID
-            const paymentInput = document.createElement('input');
-            paymentInput.type = 'hidden';
-            paymentInput.name = 'razorpay_payment_id';
-            paymentInput.value = response.razorpay_payment_id;
-            form.appendChild(paymentInput);
-            
-            // Add total amount
-            const amountInput = document.createElement('input');
-            amountInput.type = 'hidden';
-            amountInput.name = 'total_amount';
-            amountInput.value = totalAmount / 100; // Convert back to rupees
-            form.appendChild(amountInput);
-            
-            // Add adoptions data
-            const adoptionsInput = document.createElement('input');
-            adoptionsInput.type = 'hidden';
-            adoptionsInput.name = 'adoptions';
-            adoptionsInput.value = JSON.stringify(adoptionsData);
-            form.appendChild(adoptionsInput);
-            
-            // Submit form
-            document.body.appendChild(form);
-            form.submit();
-        },
-        modal: {
-            ondismiss: function() {
-                console.log('Payment modal closed');
-            }
-        },
-        theme: {
-            color: '#ff6e01'
-        }
-    };
-
-    const rzp = new Razorpay(options);
-    rzp.open();
-});
+// document.getElementById('completeAdoptionBtn').addEventListener('click', function(e) {
+//     e.preventDefault();
+//     
+//     // Get total amount from summary table
+//     const totalAmount = parseFloat(document.getElementById('totalAmount').textContent.replace('₹', '')) * 100; // Convert to paise
+//     
+//     // Get user details from session
+//     const options = {
+//         key: razorpayKeyId,
+//         amount: totalAmount,
+//         currency: 'INR',
+//         name: 'SafariGate Zoo',
+//         description: 'Animal Adoption Program',
+//         image: 'path/to/your/logo.png',
+//         handler: function(response) {
+//             console.log('Payment successful:', response);
+//             
+//             // Create form data for all adoptions
+//             const adoptionsData = JSON.parse(localStorage.getItem('adoptions'));
+//             const form = document.createElement('form');
+//             form.method = 'POST';
+//             form.action = 'process_adoption.php';
+//             
+//             // Add payment ID
+//             const paymentInput = document.createElement('input');
+//             paymentInput.type = 'hidden';
+//             paymentInput.name = 'razorpay_payment_id';
+//             paymentInput.value = response.razorpay_payment_id;
+//             form.appendChild(paymentInput);
+//             
+//             // Add total amount
+//             const amountInput = document.createElement('input');
+//             amountInput.type = 'hidden';
+//             amountInput.name = 'total_amount';
+//             amountInput.value = totalAmount / 100; // Convert back to rupees
+//             form.appendChild(amountInput);
+//             
+//             // Add adoptions data
+//             const adoptionsInput = document.createElement('input');
+//             adoptionsInput.type = 'hidden';
+//             adoptionsInput.name = 'adoptions';
+//             adoptionsInput.value = JSON.stringify(adoptionsData);
+//             form.appendChild(adoptionsInput);
+//             
+//             // Submit form
+//             document.body.appendChild(form);
+//             form.submit();
+//         },
+//         modal: {
+//             ondismiss: function() {
+//                 console.log('Payment modal closed');
+//             }
+//         },
+//         theme: {
+//             color: '#ff6e01'
+//         }
+//     };
+//
+//     const rzp = new Razorpay(options);
+//     rzp.open();
+// });
 </script>
 
 <!-- Add this CSS to your style.css file -->

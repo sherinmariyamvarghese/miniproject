@@ -139,9 +139,6 @@ $sql_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     city VARCHAR(100) NOT NULL,
     address TEXT NOT NULL,
     booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT check_total_tickets CHECK (
-        (adult_tickets + child_0_5_tickets + child_5_12_tickets + senior_tickets) <= 100
-    ),
     INDEX idx_visit_date (visit_date),
     INDEX idx_email (email),
     bill_pdf_path VARCHAR(255),

@@ -10,17 +10,17 @@ if(isset($_POST['donate'])) {
     // If user is logged in, get their ID
     $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : NULL;
     
-    $sql = "INSERT INTO donations (user_id, amount, message, donation_date) 
-            VALUES (?, ?, ?, ?)";
-            
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("idss", $user_id, $amount, $message, $date);
+    // Store donation details in session for payment confirmation
+    $_SESSION['pending_donation'] = [
+        'amount' => $amount,
+        'message' => $message,
+        'date' => $date,
+        'user_id' => $user_id
+    ];
     
-    if($stmt->execute()) {
-        $success_message = "Thank you for your donation!";
-    } else {
-        $error_message = "Error processing donation. Please try again.";
-    }
+    // Redirect to donation confirmation page
+    header('Location: donation-confirmation.php');
+    exit;
 }
 ?>
 
@@ -204,7 +204,7 @@ if(isset($_POST['donate'])) {
                 <textarea id="message" name="message" placeholder="Share why you're making this donation..."></textarea>
             </div>
 
-            <button type="submit" name="donate" class="submit-btn">Donate Now</button>
+            <button type="submit" name="donate" class="submit-btn">Proceed to Payment</button>
         </form>
     </div>
 

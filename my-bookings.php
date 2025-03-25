@@ -842,7 +842,8 @@ $bookings = $result->fetch_all(MYSQLI_ASSOC);
                 const container = document.getElementById('qrcode-container');
                 container.innerHTML = '';
                 
-                // Create QR code data - match the format expected by scan_ticket.php
+                // Create simple QR code with just the booking ID
+                // This is more reliable and doesn't require complex user validation
                 const qrData = JSON.stringify({
                     booking_id: bookingId
                 });

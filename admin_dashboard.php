@@ -279,9 +279,9 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
             color: #721c24; 
         }
 
-        /* Sidebar Styles */
+        /* Enhanced Sidebar Styles */
         .sidebar {
-            width: 250px;
+            width: 280px;
             background: var(--white);
             box-shadow: var(--shadow);
             position: fixed;
@@ -289,70 +289,93 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
             overflow-y: auto;
             left: 0;
             top: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            background: var(--white);
+        }
+
+        .sidebar-brand img {
+            width: 35px;
+            height: 35px;
+            margin-right: 1rem;
+            object-fit: contain;
+        }
+
+        .sidebar-brand h2 {
+            color: var(--main);
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .sidebar-brand i {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+            padding: 1rem 0;
         }
 
-        .sidebar-menu li {
-            margin: 0.5rem 0;
-        }
-
-        .sidebar-menu .menu-header {
-            font-size: 0.8rem;
+        .menu-header {
+            font-size: 0.75rem;
             text-transform: uppercase;
-            color: #666;
-            padding: 1rem 1.5rem 0.5rem;
-            font-weight: 500;
+            font-weight: 600;
+            color: #888;
+            padding: 1.5rem 2rem 0.8rem;
+            letter-spacing: 0.5px;
         }
 
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 0.8rem 1.5rem;
-            color: var(--black);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-menu a:hover {
-            background: var(--bg);
-            color: var(--main);
-        }
-
-        .sidebar-menu a i {
-            margin-right: 0.8rem;
-            width: 20px;
-            text-align: center;
-        }
-
-        .sidebar-menu a.active {
-            background: var(--bg);
-            color: var(--main);
-            border-right: 3px solid var(--main);
-        }
-
-        /* Dropdown menu for animals */
-        .dropdown {
+        .menu-item {
             position: relative;
         }
 
+        .menu-item a {
+            padding: 0.8rem 2rem;
+            display: flex;
+            align-items: center;
+            color: var(--black);
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item a:hover,
+        .menu-item a.active {
+            background: var(--bg);
+            color: var(--main);
+            border-left: 4px solid var(--main);
+        }
+
+        .menu-item i {
+            width: 25px;
+            font-size: 1.2rem;
+            margin-right: 0.8rem;
+            color: inherit;
+        }
+
         .dropdown-toggle {
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 100%;
+        }
+
+        .dropdown-toggle i.fa-chevron-down {
+            transition: transform 0.3s ease;
         }
 
         .dropdown-menu {
             display: none;
-            list-style: none;
-            padding-left: 2rem;
+            background: rgba(0,0,0,0.02);
         }
 
         .dropdown-menu.show {
@@ -360,7 +383,25 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
         }
 
         .dropdown-menu a {
-            padding: 0.6rem 1.5rem;
+            padding-left: 4rem;
+            font-size: 0.9rem;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+            margin: 1rem 0;
+        }
+
+        /* Hover effect for menu items */
+        .menu-item a:hover i {
+            transform: translateX(3px);
+            transition: transform 0.3s ease;
+        }
+
+        /* Active state styling */
+        .menu-item a.active i {
+            color: var(--main);
         }
 
         /* Responsive styles */
@@ -418,83 +459,157 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
         .activate-btn:hover {
             background: #218838;
         }
+
+        .section-header {
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--main);
+        }
+
+        .section-header h2 {
+            color: var(--black);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-header h2 i {
+            color: var(--main);
+        }
+
+        .dashboard-stats {
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, var(--white), var(--bg));
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .users-table {
+            margin-top: 1rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .users-table th {
+            background: linear-gradient(145deg, var(--main), #ff8c1a);
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            margin-left: 280px;
+        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
+        <div class="sidebar-brand">
+            <?php
+            $logo_path = "assets/images/logo.png"; // Update this path to where your logo is stored
+            if (file_exists($logo_path)) {
+                echo '<img src="' . $logo_path . '" alt="SafariGate">';
+            } else {
+                // Fallback to Font Awesome icon if logo is not found
+                echo '<i class="fas fa-paw" style="font-size: 2rem; color: var(--main); margin-right: 1rem;"></i>';
+            }
+            ?>
+            <h2>SafariGate</h2>
+        </div>
+        
         <ul class="sidebar-menu">
             <li class="menu-header">Dashboard</li>
-            <li>
+            <li class="menu-item">
                 <a href="admin_dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'admin_dashboard.php' ? 'active' : '' ?>">
-                    <i class="fas fa-tachometer-alt"></i> Overview
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Overview</span>
                 </a>
             </li>
 
             <li class="menu-header">Animals</li>
-            <li class="dropdown">
+            <li class="menu-item">
                 <a href="#" class="dropdown-toggle">
-                    <i class="fas fa-paw"></i> Animals
+                    <div>
+                        <i class="fas fa-paw"></i>
+                        <span>Animals</span>
+                    </div>
                     <i class="fas fa-chevron-down"></i>
                 </a>
                 <ul class="dropdown-menu <?= in_array(basename($_SERVER['PHP_SELF']), ['add_animal.php', 'view_animal.php']) ? 'show' : '' ?>">
                     <li>
                         <a href="add_animal.php" class="<?= basename($_SERVER['PHP_SELF']) == 'add_animal.php' ? 'active' : '' ?>">
-                            <i class="fas fa-plus"></i> Add Animal
+                            <i class="fas fa-plus"></i>
+                            <span>Add Animal</span>
                         </a>
                     </li>
                     <li>
                         <a href="view_animal.php" class="<?= basename($_SERVER['PHP_SELF']) == 'view_animal.php' ? 'active' : '' ?>">
-                            <i class="fas fa-list"></i> View Animals
+                            <i class="fas fa-list"></i>
+                            <span>View Animals</span>
                         </a>
                     </li>
                 </ul>
             </li>
 
-            <li class="menu-header">Bookings</li>
-            <li class="dropdown">
+            <li class="menu-header">Tickets & Bookings</li>
+            <li class="menu-item">
                 <a href="#" class="dropdown-toggle">
-                    <i class="fas fa-ticket-alt"></i> Bookings
+                    <div>
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Bookings</span>
+                    </div>
                     <i class="fas fa-chevron-down"></i>
                 </a>
-                <ul class="dropdown-menu <?= in_array(basename($_SERVER['PHP_SELF']), ['manage_ticket_rates.php', 'view_bookings.php']) ? 'show' : '' ?>">
+                <ul class="dropdown-menu <?= in_array(basename($_SERVER['PHP_SELF']), ['manage_ticket_rates.php', 'view_bookings.php', 'scan_ticket.php']) ? 'show' : '' ?>">
                     <li>
                         <a href="manage_ticket_rates.php" class="<?= basename($_SERVER['PHP_SELF']) == 'manage_ticket_rates.php' ? 'active' : '' ?>">
-                            <i class="fas fa-money-bill"></i> Manage Ticket Rates
+                            <i class="fas fa-money-bill"></i>
+                            <span>Manage Rates</span>
                         </a>
                     </li>
                     <li>
                         <a href="view_bookings.php" class="<?= basename($_SERVER['PHP_SELF']) == 'view_bookings.php' ? 'active' : '' ?>">
-                            <i class="fas fa-list"></i> View Bookings
+                            <i class="fas fa-list"></i>
+                            <span>View Bookings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="scan_ticket.php" class="<?= basename($_SERVER['PHP_SELF']) == 'scan_ticket.php' ? 'active' : '' ?>">
+                            <i class="fas fa-qrcode"></i>
+                            <span>Scan Tickets</span>
                         </a>
                     </li>
                 </ul>
             </li>
 
-            <li class="menu-header">Adoptions</li>
-            <li>
+            <li class="menu-header">Adoptions & Donations</li>
+            <li class="menu-item">
                 <a href="view_adoptions.php" class="<?= basename($_SERVER['PHP_SELF']) == 'view_adoptions.php' ? 'active' : '' ?>">
-                    <i class="fas fa-heart"></i> View Adoptions
+                    <i class="fas fa-heart"></i>
+                    <span>Adoptions</span>
                 </a>
             </li>
-
-            <li class="menu-header">Donations</li>
-            <li>
+            <li class="menu-item">
                 <a href="admin_donations.php" class="<?= basename($_SERVER['PHP_SELF']) == 'admin_donations.php' ? 'active' : '' ?>">
-                    <i class="fas fa-hand-holding-heart"></i> View Donations
+                    <i class="fas fa-hand-holding-heart"></i>
+                    <span>Donations</span>
                 </a>
             </li>
 
-            <li class="menu-header">Settings</li>
-            <li>
+            <div class="menu-divider"></div>
+
+            <li class="menu-item">
                 <a href="logout.php">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-
-            <li>
-                <a href="scan_ticket.php" class="<?= basename($_SERVER['PHP_SELF']) == 'scan_ticket.php' ? 'active' : '' ?>">
-                    <i class="fas fa-qrcode"></i> Scan Tickets
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
                 </a>
             </li>
         </ul>
@@ -548,14 +663,12 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
                     ₹<?php echo number_format($stats['bookings']['total_amount'], 2); ?>
                 </div>
             </div>
-
-            <a href="scan_ticket.php" class="dashboard-card">
-                <i class="fas fa-qrcode"></i>
-                <h3>Scan Tickets</h3>
-                <p>Validate visitor tickets</p>
-            </a>
         </div>
 
+        <div class="section-header">
+            <h2><i class="fas fa-users"></i> User Management</h2>
+        </div>
+        
         <table class="users-table">
             <thead>
                 <tr>
@@ -603,10 +716,29 @@ $users = $conn->query("SELECT id, username, email, role, status, created_at FROM
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     const dropdownMenu = this.nextElementSibling;
+                    const chevronIcon = this.querySelector('.fa-chevron-down');
+                    
+                    // Toggle the dropdown
                     dropdownMenu.classList.toggle('show');
+                    
+                    // Rotate chevron icon
+                    if (dropdownMenu.classList.contains('show')) {
+                        chevronIcon.style.transform = 'rotate(180deg)';
+                    } else {
+                        chevronIcon.style.transform = 'rotate(0)';
+                    }
                 });
             });
             
+            // Auto-expand dropdown if child is active
+            const activeLinks = document.querySelectorAll('.dropdown-menu .active');
+            activeLinks.forEach(link => {
+                const dropdownMenu = link.closest('.dropdown-menu');
+                const chevronIcon = dropdownMenu.previousElementSibling.querySelector('.fa-chevron-down');
+                dropdownMenu.classList.add('show');
+                chevronIcon.style.transform = 'rotate(180deg)';
+            });
+
             // Auto-hide messages after 5 seconds
             setTimeout(function() {
                 var messages = document.getElementsByClassName('message');

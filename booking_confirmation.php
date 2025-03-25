@@ -178,6 +178,51 @@ function generateETicket($booking) {
 }
 
 /**
+ * Generate QR image for email
+ * 
+ * @param string $booking_id Booking ID
+ * @param string $qr_data QR data
+ * @return string Path to generated QR image
+ */
+function generateQRImageForEmail($booking_id, $qr_data) {
+    // Create QR code directory if it doesn't exist
+    $qrDir = str_replace('\\', '/', __DIR__ . '/uploads/qrcodes');
+    if (!file_exists($qrDir)) {
+        if (!mkdir($qrDir, 0777, true)) {
+            throw new Exception("Failed to create QR code directory");
+        }
+        // Ensure proper permissions
+        chmod($qrDir, 0777);
+    }
+    
+    // Path for the QR image
+    $qrImagePath = $qrDir . '/qr_image_' . $booking_id . '.png';
+    
+    // Use a server-side QR code generation library
+    // This example uses PHP QR Code library
+    // You'll need to include this library in your project
+    // composer require chillerlan/php-qrcode
+    
+    // If you have the library installed:
+    if (class_exists('\\chillerlan\\QRCode\\QRCode')) {
+        $qrOptions = new \chillerlan\QRCode\QROptions([
+            'outputType' => \chillerlan\QRCode\QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel' => \chillerlan\QRCode\QRCode::ECC_H,
+        ]);
+        
+        $qrCode = new \chillerlan\QRCode\QRCode($qrOptions);
+        $qrCode->render($qr_data, $qrImagePath);
+        
+        return $qrImagePath;
+    }
+    
+    // Fallback method if library is not available
+    // This is a placeholder - you'll need to implement a fallback method
+    // or ensure the library is installed
+    return null;
+}
+
+/**
  * Send email confirmation with e-ticket
  * 
  * @param array $booking Booking details
@@ -273,6 +318,29 @@ function sendBookingConfirmationEmail($booking) {
             <p>We look forward to your visit!</p>
             <p>Best regards,<br>SafariGate Zoo Team</p>
         ";
+        
+        // Generate QR code image for email
+        $qrImagePath = generateQRImageForEmail(
+            $booking['booking_id'], 
+            $booking['qr_data'] ?? json_encode(['booking_id' => $booking['booking_id']])
+        );
+        
+        // Add QR code to email template
+        $qrCodeHtml = '';
+        if ($qrImagePath && file_exists($qrImagePath)) {
+            $qrCodeHtml = '
+            <div style="margin: 20px auto; text-align: center;">
+                <h3 style="color: #4CAF50;">Your Entry QR Code</h3>
+                <img src="cid:qrcode" alt="Entry QR Code" style="width: 200px; height: 200px;">
+                <p>Present this QR code at the entrance for quick access</p>
+            </div>';
+            
+            // Add the QR code as an embedded image in the email
+            $mail->addEmbeddedImage($qrImagePath, 'qrcode', 'qrcode.png');
+        }
+        
+        // Insert the QR code HTML into your email template
+        $messageBody = str_replace('{{QR_CODE}}', $qrCodeHtml, $messageBody);
         
         $mail->Body = $messageBody;
         $mail->AltBody = strip_tags($messageBody);

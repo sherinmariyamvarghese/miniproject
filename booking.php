@@ -57,8 +57,15 @@ $success = false;
 
 // Get ticket rates with error handling and caching
 function getTicketRates($conn) {
-    // Try to get rates from session cache first
+    // Check if rates were recently updated
+    $query = $conn->query("SELECT updated_at FROM ticket_rates WHERE id = 1");
+    $rateInfo = $query->fetch_assoc();
+    
+    // Try to get rates from session cache first, but only if they haven't been updated
     if (isset($_SESSION['ticket_rates']) && 
+        isset($_SESSION['ticket_rates_cached']) &&
+        isset($_SESSION['ticket_rates_db_time']) &&
+        $_SESSION['ticket_rates_db_time'] == $rateInfo['updated_at'] &&
         (time() - $_SESSION['ticket_rates_cached'] < 300)) { // Cache for 5 minutes
         return $_SESSION['ticket_rates'];
     }
@@ -92,6 +99,7 @@ function getTicketRates($conn) {
     // Cache the rates in session
     $_SESSION['ticket_rates'] = $rates;
     $_SESSION['ticket_rates_cached'] = time();
+    $_SESSION['ticket_rates_db_time'] = $rateInfo['updated_at'] ?? null;
 
     return $rates;
 }

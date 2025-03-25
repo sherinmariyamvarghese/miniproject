@@ -118,6 +118,17 @@ if (!isset($_SESSION['success_message'])) {
             animation: slideUp 0.5s ease-out forwards 0.8s;
         }
 
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .notification-info {
             background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
             padding: 25px;
@@ -126,6 +137,11 @@ if (!isset($_SESSION['success_message'])) {
             text-align: left;
             opacity: 0;
             animation: fadeIn 0.5s ease-out forwards 1.1s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .action-buttons {
